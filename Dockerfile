@@ -29,4 +29,4 @@ COPY . .
 EXPOSE 8080
 
 # Comando de execução (ajustado para rodar Streamlit na porta 8080)
-CMD ["streamlit", "run", "Login.py", "--server.port=8080", "--server.address=0.0.0.0", "--server.headless=true"]
+CMD ["streamlit", "run", "Login.py", "--server.port=8080", "--server.headless=true"]
