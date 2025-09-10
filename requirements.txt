@@ -6,3 +6,4 @@ psycopg2-binary
 numpy
 python-dotenv
 bcrypt
+streamlit_plotly_events
