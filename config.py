@@ -41,7 +41,9 @@ engine = create_engine(
     pool_size=5, #mantém 5 conexões "fixas" abertas.
     max_overflow=10, #pode abrir até mais 10 extras, se necessário.
     pool_timeout=30, #espera até 30s por uma conexão livre antes de lançar erro.
-    pool_recycle=1800  #recicla conexões a cada 30 min para evitar "stale connections" (desconexão inesperada pelo servidor).
+    pool_recycle=300,  #recicla conexões a cada 5 min para evitar "stale connections" (desconexão inesperada pelo servidor).
+    pool_pre_ping=True #testa se a conexão ainda está viva antes de usar
 )
 
 print("✅ Engine criada com sucesso!")
+
