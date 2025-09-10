@@ -7,7 +7,9 @@ import unicodedata
 import hmac
 import hashlib
 import os
+import logging
 from typing import Optional, List, Union
+from sqlalchemy.exc import OperationalError
 
 # Obtém chave secreta do ambiente (igual ao Node.js)
 HASH_SECRET = os.getenv("HASH_SECRET")
@@ -51,12 +53,6 @@ def validar_permissao(user_email_hash: str) -> bool:
     """
     Valida se o usuário tem permissão para acessar o dashboard.
     Apenas papéis 'GestorFederal', 'GestorEstadual' e 'GestorMunicipal' são aceitos.
-
-    Args:
-        user_email_hash (str): Hash do e-mail do usuário autenticado.
-
-    Returns:
-        bool: True se o usuário tiver permissão, False caso contrário.
     """
     permissoes_permitidas = {"GestorFederal", "GestorEstadual", "GestorMunicipal"}
 
@@ -64,21 +60,23 @@ def validar_permissao(user_email_hash: str) -> bool:
         with engine.connect() as conn:
             query = text("""
                 SELECT r.name
- 	            FROM auth.users u
-	            JOIN auth.user_roles ur ON u.id = ur.user_id
+                FROM auth.users u
+                JOIN auth.user_roles ur ON u.id = ur.user_id
                 JOIN auth.roles r ON ur.role_id = r.id
                 WHERE u.email_hash = :email_hash
             """)
-            result = conn.execute(query, {"email_hash": user_email_hash}).fetchone()
+            # Executa a query e retorna todos os papéis (roles) do usuário como lista de tuplas (role_name,)
+            roles = conn.execute(query, {"email_hash": user_email_hash}).fetchall()
+            user_roles = {r[0] for r in roles}
+            return bool(user_roles & permissoes_permitidas)
 
-            if result:
-                role_name = result[0]
-                return role_name in permissoes_permitidas
-
-            return False  # Usuário não encontrado ou sem role vinculada
-
+    except OperationalError as e:
+        logging.error(f"Falha operacional no banco ao validar permissões: {e}")
+        st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
+        return False
     except Exception as e:
-        st.error(f"Erro ao validar permissões: {e}")
+        logging.error(f"Erro inesperado ao validar permissões: {e}")
+        st.error("Ocorreu um erro inesperado.")
         return False
 
 # ---------------------------
@@ -87,17 +85,20 @@ def validar_permissao(user_email_hash: str) -> bool:
 def autenticar_usuario(username: str, password: str) -> bool:
     """
     Valida o login do usuário contra o banco de dados.
-    Retorna True se sucesso, False se falhar.
+    Retorna True se sucesso, False caso contrário.
     """
 
     try:
-        email_hash = hash_value(username)  # transforma email em hash
+        # Normaliza entrada do usuário
+        username = username.strip().lower()
+        email_hash = hash_value(username)
+
         with engine.connect() as conn:
             query = text("SELECT password FROM auth.users WHERE email_hash = :u")
             result = conn.execute(query, {"u": email_hash}).fetchone()
 
         if not result:
-            # Usuário não encontrado
+            #st.error("Usuário ou senha inválidos.")
             return False
 
         senha_hash = result[0]
@@ -105,11 +106,16 @@ def autenticar_usuario(username: str, password: str) -> bool:
         if bcrypt.checkpw(password.encode("utf-8"), senha_hash.encode("utf-8")):
             return True
         else:
+            #st.error("Usuário ou senha inválidos.")
             return False
 
+    except OperationalError as e:
+        logging.error(f"Falha operacional no banco: {e}")
+        st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
+        return False
     except Exception as e:
-        # Em produção, logue o erro em vez de mostrar
-        st.error(f"Erro ao autenticar: {e}")
+        logging.error(f"Erro inesperado: {e}")
+        st.error("Ocorreu um erro inesperado.")
         return False
 
 # ---------------------------
@@ -149,4 +155,3 @@ else:
 
     email_hash = hash_value(st.session_state.user)
     dp.dashboardPedegogico(email_hash)
-
