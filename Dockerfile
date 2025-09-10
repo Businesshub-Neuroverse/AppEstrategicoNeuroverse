@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Define diretório de trabalho
-WORKDIR /app
+WORKDIR /AppEstrategicoNeuroverse
 
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
@@ -24,3 +24,4 @@ EXPOSE 8080
 
 # Comando de execução (ajustado para Cloud Run)
 CMD ["streamlit", "run", "AppEstrategicoNeuroverse/Login.py", "--server.port=8080", "--server.address=0.0.0.0"]
+
