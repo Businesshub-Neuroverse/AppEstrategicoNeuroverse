@@ -7,6 +7,8 @@ import streamlit as st
 import numpy as np
 from sqlalchemy import text
 from config import engine  # importa a engine pronta
+from sqlalchemy.exc import OperationalError
+import logging
 
 def dashboardPedegogico(email_hash=None):
 
@@ -57,9 +59,15 @@ def dashboardPedegogico(email_hash=None):
     # -----------------------------
     try:
         df = pd.read_sql(query, engine, params={"email_hash": email_hash})
-    except Exception as e:
-        st.error(f"Erro ao ler o banco de dados: {e}")
+    except OperationalError as e:
+        logging.error(f"Falha operacional ao conectar banco no consultar escolas/alunos: {e}")
+        st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
         df = pd.DataFrame()
+    except Exception as e:
+        logging.error(f"Erro inesperado ao consultar dados escolas/alunos: {e}")
+        st.error("Ocorreu um erro inesperado. Tente novamente mais tarde.")
+        df = pd.DataFrame()
+
 
     if df.empty:
         st.warning("Nenhum registro encontrado.")
