@@ -125,7 +125,7 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
 if not st.session_state.logged_in:
-    st.set_page_config(page_title="Estratégico Neuroverse", layout="wide")
+    st.set_page_config(page_title="Estratégico Neuroverse", page_icon="assets/favicon.ico", layout="wide")
     st.title("🔒 Login")
 
     with st.form("login_form"):
@@ -155,4 +155,5 @@ else:
 
     email_hash = hash_value(st.session_state.user)
     dp.dashboardPedegogico(email_hash)
+
 
