@@ -15,7 +15,7 @@ def dashboardPedegogico(email_hash=None):
     # -------------------------
     # Layout da Página
     # -------------------------
-    st.set_page_config(layout="wide")
+    st.set_page_config(page_title="Dash Pedagógico", layout="wide")
     st.title("📊 Painel Estratégico - Desempenho Geral Pedagógico")
 
     query = text("""
@@ -262,3 +262,4 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
