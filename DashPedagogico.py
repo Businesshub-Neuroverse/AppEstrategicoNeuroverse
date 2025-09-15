@@ -16,18 +16,66 @@ import logging
 st.markdown(
     """
     <style>
-        /* Fundo da página */
+        /* 🌟 Fundo geral da aplicação */
         .stApp {
             background-color: #FFFFFF;
             color: #000000;
         }
-        /* Sidebar */
+
+        /* 🌟 Barra lateral */
         [data-testid="stSidebar"] {
-            background-color: #F0F2F6;
+            background-color: #F8F9FA;
             color: #000000;
         }
-        /* Títulos */
-        h1, h2, h3, h4, h5, h6 {
+
+        /* 🌟 Títulos e textos */
+        h1, h2, h3, h4, h5, h6, p, span, label, div {
+            color: #000000 !important;
+        }
+
+        /* 🌟 Botões */
+        .stButton > button {
+            background-color: #E9ECEF;
+            color: #000000;
+            border: 1px solid #CED4DA;
+            border-radius: 5px;
+        }
+        .stButton > button:hover {
+            background-color: #DEE2E6;
+            color: #000000;
+        }
+
+        /* 🌟 Inputs de texto, números, etc */
+        .stTextInput > div > div > input,
+        .stNumberInput input,
+        .stTextArea textarea {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #CED4DA;
+            border-radius: 5px;
+        }
+
+        /* 🌟 Selectbox e multiselect */
+        .stSelectbox div[data-baseweb="select"],
+        .stMultiSelect div[data-baseweb="select"] {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #CED4DA;
+            border-radius: 5px;
+        }
+
+        /* 🌟 Tabelas */
+        .stDataFrame,
+        .stTable {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        /* 🌟 Caixas de métricas e cards */
+        [data-testid="stMetricValue"] {
+            color: #000000;
+        }
+        [data-testid="stMetricLabel"] {
             color: #000000;
         }
     </style>
@@ -287,6 +335,7 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
 
 
 
