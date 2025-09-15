@@ -10,114 +10,72 @@ from config import engine  # importa a engine pronta
 from sqlalchemy.exc import OperationalError
 import logging
 
-# -----------------------
-# Forçar tema claro (branco) com CSS customizado
-# -----------------------
-st.markdown(
+
+def dashboardPedegogico(email_hash=None):
+
+    st.markdown(
     """
     <style>
-    /* 🌟 Fundo geral da aplicação */
-    .stApp {
+    /* 🌟 Fundo geral da app e topo da página */
+    body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
         background-color: #FFFFFF !important;
         color: #000000 !important;
+        padding-top: 0px !important;  /* remove espaço no topo */
+        margin-top: 0px !important;   /* remove margem no topo */
     }
 
-    /* 🌟 Barra lateral */
+    /* 🌟 Sidebar */
     [data-testid="stSidebar"] {
-        background-color: #F8F9FA !important;
-        color: #000000 !important;
-    }
-
-    /* 🌟 Títulos e textos */
-    h1, h2, h3, h4, h5, h6, p, span, label, div {
-        color: #000000 !important;
-    }
-
-    /* 🌟 Botões */
-    .stButton > button {
-        background-color: #E9ECEF !important;
-        color: #000000 !important;
-        border: 1px solid #CED4DA !important;
-        border-radius: 5px !important;
-    }
-    .stButton > button:hover {
-        background-color: #DEE2E6 !important;
-    }
-
-    /* 🌟 Inputs de texto, números, textarea */
-    .stTextInput > div > div > input,
-    .stNumberInput input,
-    .stTextArea textarea {
         background-color: #FFFFFF !important;
         color: #000000 !important;
-        border: 1px solid #CED4DA !important;
-        border-radius: 5px !important;
     }
 
-    /* 🌟 Selectbox e multiselect */
+    /* 🌟 Containers internos (gráficos, tabelas, metric cards) */
+    .css-1d391kg,  /* Containers genéricos do Streamlit */
+    .css-1kyxreq,  /* Containers de gráficos/tabelas */
+    .css-1v3fvcr,  /* Colunas e espaços */
+    .stDataFrame, .stTable, 
+    div[data-testid="stMetricContainer"] {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: none !important;        /* remove bordas escuras */
+    }
+
+    /* 🌟 Gráficos Plotly */
+    .element-container, div[data-testid="stPlotlyChart"] {
+        background-color: #FFFFFF !important;
+        border: none !important;        /* remove borda preta do gráfico */
+    }
+
+    /* 🌟 Tabs, selects, multiselects, sliders, radios, checkboxes */
     .stSelectbox div[data-baseweb="select"],
-    .stMultiSelect div[data-baseweb="select"] {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: 1px solid #CED4DA !important;
-        border-radius: 5px !important;
-    }
-    .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"],
-    .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"] {
+    .stMultiSelect div[data-baseweb="select"],
+    .stSlider > div > div > div,
+    .stRadio div[role="radiogroup"] label,
+    .stCheckbox div[role="checkbox"] label,
+    [data-testid="stTabs"] button {
         background-color: #FFFFFF !important;
         color: #000000 !important;
     }
+
+    /* 🌟 Hover nas opções do multiselect e selectbox */
     .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover,
     .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover {
-        background-color: #E9ECEF !important;
+        background-color: #F0F0F0 !important;
+        color: #000000 !important;
     }
+
+    /* 🌟 Tags selecionadas do multiselect */
     .stMultiSelect div[data-baseweb="tag"] {
-        background-color: #F8F9FA !important;
-        color: #000000 !important;
-        border: 1px solid #CED4DA !important;
-    }
-
-    /* 🌟 Radio buttons e checkboxes */
-    .stRadio div[role="radiogroup"] label,
-    .stCheckbox div[role="checkbox"] label {
-        color: #000000 !important;
-    }
-
-    /* 🌟 Sliders */
-    .stSlider > div > div > div {
-        background-color: #E9ECEF !important;
-    }
-
-    /* 🌟 Tabs */
-    [data-testid="stTabs"] button {
-        background-color: #F8F9FA !important;
-        color: #000000 !important;
-        border: 1px solid #CED4DA !important;
-        border-radius: 5px !important;
-    }
-    [data-testid="stTabs"] button[selected] {
-        background-color: #DEE2E6 !important;
-        color: #000000 !important;
-    }
-
-    /* 🌟 Tabelas */
-    .stDataFrame,
-    .stTable {
         background-color: #FFFFFF !important;
         color: #000000 !important;
-    }
-
-    /* 🌟 Métricas e cards */
-    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
-        color: #000000 !important;
+        border: 1px solid #CED4DA !important;
     }
     </style>
     """,
     unsafe_allow_html=True
-)
+    )
 
-
-def dashboardPedegogico(email_hash=None):
 
     # -------------------------
     # Layout da Página
@@ -369,6 +327,7 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
 
 
 
