@@ -18,7 +18,7 @@ st.markdown(
         """,
         unsafe_allow_html=True
 )
-st.write("teste ju")
+st.write("teste novidades")
 # -----------------------
 # Captura parâmetros da URL
 # -----------------------
@@ -36,5 +36,6 @@ if pagina == "dash_ped":
 else:
     st.error("Parâmetro 'page' não fornecido na URL - Página não Encontrada!")
     st.stop()
+
 
 
