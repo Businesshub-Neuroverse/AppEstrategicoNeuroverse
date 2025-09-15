@@ -26,7 +26,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 </style>
 """, unsafe_allow_html=True)   # unsafe_allow_html=True permite inserir HTML/CSS personalizado
-
+st.write("new ju")
 # -----------------------
 # Captura e trata os parâmetros da URL
 # -----------------------
@@ -51,3 +51,4 @@ else:
     # Caso 'page' não seja 'dash_ped' ou não exista, mostra mensagem de erro
     st.error("Parâmetro 'page' não fornecido ou página não encontrada!")
     st.stop()  # Para a execução da aplicação
+
