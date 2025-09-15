@@ -24,7 +24,7 @@ st.markdown(
 # Captura parâmetros da URL
 # -----------------------
 params = st.query_params
-
+st.write("teste juju")
 # Decodifica os parâmetros para evitar problemas com caracteres especiais
 email_hash = unquote(params.get("email_hash", [None])[0]) if params.get("email_hash") else None
 pagina = unquote(params.get("page", [None])[0]) if params.get("page") else None
@@ -44,3 +44,4 @@ if pagina == "dash_ped":
 else:
     st.error("Parâmetro 'page' não fornecido ou página não encontrada!")
     st.stop()
+
