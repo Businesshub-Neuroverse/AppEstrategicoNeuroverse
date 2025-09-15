@@ -13,20 +13,27 @@ import logging
 # -----------------------
 # Forçar tema claro (branco) com CSS customizado
 # -----------------------
-st.markdown("""
-<style>
-/* Define o fundo da aplicação como branco e o texto como preto */
-.stApp { 
-    background-color: #FFFFFF; 
-    color: #000000; 
-}
-
-/* Define os títulos (h1, h2, etc.) como preto */
-h1,h2,h3,h4,h5,h6 { 
-    color: #000000; 
-}
-</style>
-""", unsafe_allow_html=True)   # unsafe_allow_html=True permite inserir HTML/CSS personalizado
+st.markdown(
+    """
+    <style>
+        /* Fundo da página */
+        .stApp {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        /* Sidebar */
+        [data-testid="stSidebar"] {
+            background-color: #F0F2F6;
+            color: #000000;
+        }
+        /* Títulos */
+        h1, h2, h3, h4, h5, h6 {
+            color: #000000;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 def dashboardPedegogico(email_hash=None):
 
@@ -280,6 +287,7 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
 
 
 
