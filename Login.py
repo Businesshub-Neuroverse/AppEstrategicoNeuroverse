@@ -24,8 +24,10 @@ st.write("teste novidades")
 # -----------------------
 params = st.query_params
 email_hash = params.get("email_hash", [None])[0]
-pagina = params.get("page", [None])[0] or ""
+pagina = params.get("page", [None])[0] 
 
+st.write("email par:", email_hash)
+st.write("page par:", pagina)
 
 if pagina == "dash_ped":
     if not email_hash:
@@ -36,6 +38,7 @@ if pagina == "dash_ped":
 else:
     st.error("Parâmetro 'page' não fornecido na URL - Página não Encontrada!")
     st.stop()
+
 
 
 
