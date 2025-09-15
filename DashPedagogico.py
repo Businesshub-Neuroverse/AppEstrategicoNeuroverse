@@ -56,12 +56,34 @@ st.markdown(
         }
 
         /* 🌟 Selectbox e multiselect */
+        /* Caixa de seleção do multiselect e selectbox */
         .stSelectbox div[data-baseweb="select"],
         .stMultiSelect div[data-baseweb="select"] {
             background-color: #FFFFFF;
             color: #000000;
             border: 1px solid #CED4DA;
             border-radius: 5px;
+        }
+
+        /* Itens da lista dropdown (as opções) */
+        .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"],
+        .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"] {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+
+        /* Item da lista quando passa o mouse por cima (hover) */
+        .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover,
+        .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover {
+            background-color: #E9ECEF !important;
+            color: #000000 !important;
+        }
+
+        /* Tags de itens já selecionados no multiselect */
+        .stMultiSelect div[data-baseweb="tag"] {
+            background-color: #F8F9FA !important;
+            color: #000000 !important;
+            border: 1px solid #CED4DA !important;
         }
 
         /* 🌟 Tabelas */
@@ -335,6 +357,7 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
 
 
 
