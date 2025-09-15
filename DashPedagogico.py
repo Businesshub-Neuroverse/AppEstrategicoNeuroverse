@@ -16,94 +16,106 @@ import logging
 st.markdown(
     """
     <style>
-        /* 🌟 Fundo geral da aplicação */
-        .stApp {
-            background-color: #FFFFFF;
-            color: #000000;
-        }
+    /* 🌟 Fundo geral da aplicação */
+    .stApp {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+    }
 
-        /* 🌟 Barra lateral */
-        [data-testid="stSidebar"] {
-            background-color: #F8F9FA;
-            color: #000000;
-        }
+    /* 🌟 Barra lateral */
+    [data-testid="stSidebar"] {
+        background-color: #F8F9FA !important;
+        color: #000000 !important;
+    }
 
-        /* 🌟 Títulos e textos */
-        h1, h2, h3, h4, h5, h6, p, span, label, div {
-            color: #000000 !important;
-        }
+    /* 🌟 Títulos e textos */
+    h1, h2, h3, h4, h5, h6, p, span, label, div {
+        color: #000000 !important;
+    }
 
-        /* 🌟 Botões */
-        .stButton > button {
-            background-color: #E9ECEF;
-            color: #000000;
-            border: 1px solid #CED4DA;
-            border-radius: 5px;
-        }
-        .stButton > button:hover {
-            background-color: #DEE2E6;
-            color: #000000;
-        }
+    /* 🌟 Botões */
+    .stButton > button {
+        background-color: #E9ECEF !important;
+        color: #000000 !important;
+        border: 1px solid #CED4DA !important;
+        border-radius: 5px !important;
+    }
+    .stButton > button:hover {
+        background-color: #DEE2E6 !important;
+    }
 
-        /* 🌟 Inputs de texto, números, etc */
-        .stTextInput > div > div > input,
-        .stNumberInput input,
-        .stTextArea textarea {
-            background-color: #FFFFFF;
-            color: #000000;
-            border: 1px solid #CED4DA;
-            border-radius: 5px;
-        }
+    /* 🌟 Inputs de texto, números, textarea */
+    .stTextInput > div > div > input,
+    .stNumberInput input,
+    .stTextArea textarea {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #CED4DA !important;
+        border-radius: 5px !important;
+    }
 
-        /* 🌟 Selectbox e multiselect */
-        /* Caixa de seleção do multiselect e selectbox */
-        .stSelectbox div[data-baseweb="select"],
-        .stMultiSelect div[data-baseweb="select"] {
-            background-color: #FFFFFF;
-            color: #000000;
-            border: 1px solid #CED4DA;
-            border-radius: 5px;
-        }
+    /* 🌟 Selectbox e multiselect */
+    .stSelectbox div[data-baseweb="select"],
+    .stMultiSelect div[data-baseweb="select"] {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #CED4DA !important;
+        border-radius: 5px !important;
+    }
+    .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"],
+    .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"] {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+    }
+    .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover,
+    .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover {
+        background-color: #E9ECEF !important;
+    }
+    .stMultiSelect div[data-baseweb="tag"] {
+        background-color: #F8F9FA !important;
+        color: #000000 !important;
+        border: 1px solid #CED4DA !important;
+    }
 
-        /* Itens da lista dropdown (as opções) */
-        .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"],
-        .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"] {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
+    /* 🌟 Radio buttons e checkboxes */
+    .stRadio div[role="radiogroup"] label,
+    .stCheckbox div[role="checkbox"] label {
+        color: #000000 !important;
+    }
 
-        /* Item da lista quando passa o mouse por cima (hover) */
-        .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover,
-        .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover {
-            background-color: #E9ECEF !important;
-            color: #000000 !important;
-        }
+    /* 🌟 Sliders */
+    .stSlider > div > div > div {
+        background-color: #E9ECEF !important;
+    }
 
-        /* Tags de itens já selecionados no multiselect */
-        .stMultiSelect div[data-baseweb="tag"] {
-            background-color: #F8F9FA !important;
-            color: #000000 !important;
-            border: 1px solid #CED4DA !important;
-        }
+    /* 🌟 Tabs */
+    [data-testid="stTabs"] button {
+        background-color: #F8F9FA !important;
+        color: #000000 !important;
+        border: 1px solid #CED4DA !important;
+        border-radius: 5px !important;
+    }
+    [data-testid="stTabs"] button[selected] {
+        background-color: #DEE2E6 !important;
+        color: #000000 !important;
+    }
 
-        /* 🌟 Tabelas */
-        .stDataFrame,
-        .stTable {
-            background-color: #FFFFFF;
-            color: #000000;
-        }
+    /* 🌟 Tabelas */
+    .stDataFrame,
+    .stTable {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+    }
 
-        /* 🌟 Caixas de métricas e cards */
-        [data-testid="stMetricValue"] {
-            color: #000000;
-        }
-        [data-testid="stMetricLabel"] {
-            color: #000000;
-        }
+    /* 🌟 Métricas e cards */
+    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
+        color: #000000 !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 def dashboardPedegogico(email_hash=None):
 
@@ -357,6 +369,7 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
 
 
 
