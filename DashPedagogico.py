@@ -16,6 +16,13 @@ def dashboardPedegogico(email_hash=None):
     st.markdown(
     """
     <style>
+
+    /* 🌟 Esconde a toolbar do topo (rerun/deploy) */
+    [data-testid="stHeader"], /* cabeçalho principal do Streamlit */
+    div[role="banner"] {      /* banner global, inclui toolbar */
+        display: none !important;
+    }
+
     /* 🌟 Fundo geral da app e topo da página */
     body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
         background-color: #FFFFFF !important;
@@ -45,6 +52,17 @@ def dashboardPedegogico(email_hash=None):
     .element-container, div[data-testid="stPlotlyChart"] {
         background-color: #FFFFFF !important;
         border: none !important;        /* remove borda preta do gráfico */
+    }
+
+    /* 🌟 Gráficos Plotly - forçar fundo branco e remover borda */
+    div[data-testid="stPlotlyChart"] > div {
+        background-color: #FFFFFF !important;
+        border: none !important;
+    }
+
+    div[data-testid="stPlotlyChart"] iframe {
+        background-color: #FFFFFF !important;
+        border: none !important;
     }
 
     /* 🌟 Tabs, selects, multiselects, sliders, radios, checkboxes */
@@ -264,7 +282,9 @@ def dashboardPedegogico(email_hash=None):
         yaxis=dict(title="", automargin=True),
         xaxis=dict(title="Quantidade de Alunos Avaliados", automargin=True),
         hovermode="closest",
-        showlegend=False
+        showlegend=False,
+        paper_bgcolor='white',
+        plot_bgcolor='white'
     )
 
     with col1:
