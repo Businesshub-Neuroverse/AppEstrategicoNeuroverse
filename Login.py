@@ -22,7 +22,7 @@ st.markdown(
 # -----------------------
 # Captura parâmetros da URL
 # -----------------------
-params = st.query_params()
+params = st.query_params
 email_hash = params.get("email_hash", [None])[0]
 pagina = params.get("page", [None])[0] or ""
 
@@ -36,3 +36,4 @@ if pagina == "dash_ped":
 else:
     st.error("Parâmetro 'page' não fornecido na URL - Página não Encontrada!")
     st.stop()
+
