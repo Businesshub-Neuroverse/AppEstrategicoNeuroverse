@@ -10,13 +10,31 @@ from config import engine  # importa a engine pronta
 from sqlalchemy.exc import OperationalError
 import logging
 
+# -----------------------
+# Forçar tema claro (branco) com CSS customizado
+# -----------------------
+st.markdown("""
+<style>
+/* Define o fundo da aplicação como branco e o texto como preto */
+.stApp { 
+    background-color: #FFFFFF; 
+    color: #000000; 
+}
+
+/* Define os títulos (h1, h2, etc.) como preto */
+h1,h2,h3,h4,h5,h6 { 
+    color: #000000; 
+}
+</style>
+""", unsafe_allow_html=True)   # unsafe_allow_html=True permite inserir HTML/CSS personalizado
+
 def dashboardPedegogico(email_hash=None):
 
     # -------------------------
     # Layout da Página
     # -------------------------
     st.set_page_config(page_title="Dash Pedagógico", page_icon="assets/favicon.ico", layout="wide")
-    st.title("📊 Painel Estratégico - Desempenho Geral Pedagógico")
+    st.title("📊 Desempenho Geral Pedagógico")
 
     query = text("""
     SELECT 
@@ -262,5 +280,6 @@ def dashboardPedegogico(email_hash=None):
     with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             st.dataframe(df_styled, use_container_width=True)
+
 
 
