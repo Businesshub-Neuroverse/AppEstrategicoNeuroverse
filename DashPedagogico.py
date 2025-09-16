@@ -1,4 +1,3 @@
-
 # Biblioteca para análise e manipulação de dados
 import pandas as pd
 import plotly.express as px
@@ -13,59 +12,31 @@ import logging
 
 def dashboardPedegogico(email_hash=None):
 
-    st.markdown(
-    """
+    st.markdown("""
     <style>
-
-    /* 🌟 Esconde a toolbar do topo (rerun/deploy) */
-    [data-testid="stHeader"], /* cabeçalho principal do Streamlit */
-    div[role="banner"] {      /* banner global, inclui toolbar */
+    /* 🌟 Remove toolbar e banner do topo */
+    [data-testid="stHeader"], div[role="banner"] {
         display: none !important;
     }
-
-    /* 🌟 Fundo geral da app e topo da página */
+                
+    /* 🌟 Fundo geral da app */
     body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        padding-top: 0px !important;  /* remove espaço no topo */
-        margin-top: 0px !important;   /* remove margem no topo */
+        padding-top: 0 !important;
+        margin-top: 0 !important;
     }
 
     /* 🌟 Sidebar */
     [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
+        background-color: #F5F5F5 !important;
         color: #000000 !important;
     }
 
-    /* 🌟 Containers internos (gráficos, tabelas, metric cards) */
-    .css-1d391kg,  /* Containers genéricos do Streamlit */
-    .css-1kyxreq,  /* Containers de gráficos/tabelas */
-    .css-1v3fvcr,  /* Colunas e espaços */
-    .stDataFrame, .stTable, 
-    div[data-testid="stMetricContainer"] {
-        background-color: #FFFFFF !important;
+    /* 🌟 Labels e textos da sidebar (filtros) */
+    [data-testid="stSidebar"] label {
         color: #000000 !important;
-        border: none !important;        /* remove bordas escuras */
     }
 
-    /* 🌟 Gráficos Plotly */
-    .element-container, div[data-testid="stPlotlyChart"] {
-        background-color: #FFFFFF !important;
-        border: none !important;        /* remove borda preta do gráfico */
-    }
-
-    /* 🌟 Gráficos Plotly - forçar fundo branco e remover borda */
-    div[data-testid="stPlotlyChart"] > div {
-        background-color: #FFFFFF !important;
-        border: none !important;
-    }
-
-    div[data-testid="stPlotlyChart"] iframe {
-        background-color: #FFFFFF !important;
-        border: none !important;
-    }
-
-    /* 🌟 Tabs, selects, multiselects, sliders, radios, checkboxes */
+    /* 🌟 Inputs, selects, multiselects na sidebar */
     .stSelectbox div[data-baseweb="select"],
     .stMultiSelect div[data-baseweb="select"],
     .stSlider > div > div > div,
@@ -76,7 +47,7 @@ def dashboardPedegogico(email_hash=None):
         color: #000000 !important;
     }
 
-    /* 🌟 Hover nas opções do multiselect e selectbox */
+    /* 🌟 Hover das opções do select/multiselect */
     .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover,
     .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover {
         background-color: #F0F0F0 !important;
@@ -89,11 +60,71 @@ def dashboardPedegogico(email_hash=None):
         color: #000000 !important;
         border: 1px solid #CED4DA !important;
     }
-    </style>
-    """,
-    unsafe_allow_html=True
-    )
 
+    /* 🌟 Containers internos (gráficos, tabelas, metric cards) */
+    .css-1d391kg,
+    .css-1kyxreq,
+    .css-1v3fvcr,
+    .stDataFrame,
+    .stTable,
+    div[data-testid="stMetricContainer"] {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: none !important;
+    }
+
+    /* 🌟 Reset Plotly / plotly_events container + iframe */
+    div[data-testid="stPlotlyChart"],
+    div[data-testid="stPlotlyChart"] > div,
+    div[data-testid="stPlotlyChart"] iframe,
+    iframe.stCustomComponentV1,
+    .st-emotion-cache {
+        background-color: #FFFFFF !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 🌟 Fundo da plot area */
+    div[data-testid="stPlotlyChart"] .plotly .cartesianlayer,
+    div[data-testid="stPlotlyChart"] .plotly .bg,
+    div[data-testid="stPlotlyChart"] .plotly .subplot {
+        background-color: #FFFFFF !important;
+    }
+
+    /* 🌟 Remove bordas pretas externas e padding residual */
+    div[data-testid="stPlotlyChart"] > div,
+    div[data-testid="stPlotlyChart"] iframe,
+    .st-emotion-cache,
+    .stPlotlyChartContainer {
+        background-color: #FFFFFF !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 🌟 Título do gráfico no topo */
+    div[data-testid="stPlotlyChart"] .gtitle {
+        margin-top: 0 !important;
+        margin-bottom: 5px !important;
+        font-weight: bold;
+        color: #000000;
+    }
+
+    /* 🌟 Eixos do gráfico */
+    div[data-testid="stPlotlyChart"] .plotly .xaxis, 
+    div[data-testid="stPlotlyChart"] .plotly .yaxis {
+        gridcolor: #EDEDED !important;
+        zerolinecolor: #EDEDED !important;
+        color: #000000 !important;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
 
     # -------------------------
     # Layout da Página
@@ -283,12 +314,15 @@ def dashboardPedegogico(email_hash=None):
         xaxis=dict(title="Quantidade de Alunos Avaliados", automargin=True),
         hovermode="closest",
         showlegend=False,
-        paper_bgcolor='white',
-        plot_bgcolor='white'
+        paper_bgcolor="white",  # fundo externo do gráfico
+        plot_bgcolor="white",   # fundo da área do gráfico
+        autosize=True             # permite redimensionamento automático
     )
 
     with col1:
-        selected_points = plotly_events(fig_stack, select_event=True, key="stack_click")
+        #selected_points = plotly_events(fig_stack, select_event=True, key="stack_click")
+        selected_points = plotly_events(fig_stack, select_event=True, key="stack_click", override_height=None, override_width=None)
+
 
     # ---------------------------
     # 2. Tabela Interativa
@@ -341,7 +375,7 @@ def dashboardPedegogico(email_hash=None):
     def colorir_linha_por_pg(row):
         cor = cor_por_pontuacao(row["Pontuação Geral"])
         return [f'background-color: {cor}; color: black'] * len(row)
-
+    
     df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
 
     with col2:
