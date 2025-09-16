@@ -282,10 +282,10 @@ def dashboardPedegogico(email_hash=None):
             return "#FF3A3A"
 
     # ---------------------------
-    # 1. Gráfico de Barras empilhadas (clicável)
+    # Preparar dados do gráfico empilhado
     # ---------------------------
     df_stack = df_filtrado.groupby(
-    ["classificacao_aluno", "escola_nome"], as_index=False
+        ["classificacao_aluno", "escola_nome"], as_index=False
     ).agg(qtd_alunosAvaliados=("aluno_nome", "count"))
 
     df_media = df_filtrado.groupby("escola_nome")["avaliacao_classif"].mean().reset_index()
@@ -294,9 +294,16 @@ def dashboardPedegogico(email_hash=None):
 
     df_stack = df_stack.merge(df_media[["escola_nome", "escola_label", "cor_media"]], on="escola_nome", how="left")
     df_stack["texto_barra"] = df_stack["qtd_alunosAvaliados"].astype(str)
-
     df_stack["eixo_XQtd_Alunos"] = df_stack["qtd_alunosAvaliados"].astype(str)
 
+    # Se por algum motivo df_stack ficou vazio (proteção)
+    if df_stack.empty:
+        st.warning("Sem dados para montar gráfico.")
+        return
+
+    # ---------------------------
+    # Monta o gráfico Plotly
+    # ---------------------------
     fig_stack = px.bar(
         df_stack,
         x="eixo_XQtd_Alunos",
@@ -306,7 +313,7 @@ def dashboardPedegogico(email_hash=None):
         text="texto_barra",
         orientation="h",
         title="Desempenho Classificatório por Escola e Alunos - Clique na Barra para Detalhar",
-        labels={"eixo_XQtd_Alunos": "Quantidade de Alunos Avaliados", "escola_label": "", "texto_barra" : "Resumo"}
+        labels={"eixo_XQtd_Alunos": "Quantidade de Alunos Avaliados", "escola_label": "", "texto_barra": "Resumo"}
     )
 
     fig_stack.update_layout(
@@ -314,18 +321,127 @@ def dashboardPedegogico(email_hash=None):
         xaxis=dict(title="Quantidade de Alunos Avaliados", automargin=True),
         hovermode="closest",
         showlegend=False,
-        paper_bgcolor="white",  # fundo externo do gráfico
-        plot_bgcolor="white",   # fundo da área do gráfico
-        autosize=True             # permite redimensionamento automático
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        autosize=True
     )
 
+    # ---------------------------
+    # Captura clique com plotly_events
+    # ---------------------------
     with col1:
-        #selected_points = plotly_events(fig_stack, select_event=True, key="stack_click")
-        selected_points = plotly_events(fig_stack, select_event=True, key="stack_click", override_height=None, override_width=None)
-
+        selected_points = plotly_events(
+            fig_stack,
+            select_event=True,
+            key="stack_click",
+            override_height=None,
+            override_width=None
+        )
 
     # ---------------------------
-    # 2. Tabela Interativa
+    # Garante chave na session_state para persistir escolha
+    # ---------------------------
+    if "ultima_selecao" not in st.session_state:
+        # estrutura: {'escola': <escola_label>, 'curve_idx': <int>, 'classif': <nome_classificacao>}
+        st.session_state["ultima_selecao"] = None
+
+    # ---------------------------
+    # Lógica segura para determinar (escola_clicked, curve_idx, classif_clicked)
+    # ---------------------------
+    try:
+        # Se houve clique pelo usuário -> atualiza ultima_selecao
+        if selected_points:
+            ponto = selected_points[0]
+            escola_clicked = ponto.get("y") or df_stack["escola_label"].iloc[0]
+            curva_idx = int(ponto.get("curveNumber", 0))
+
+            # Ajusta curva_idx se estiver fora do range
+            n_traces = len(fig_stack.data)
+            if n_traces == 0:
+                # fallback: pega qualquer classificação disponível
+                classif_clicked = df_stack["classificacao_aluno"].iloc[0]
+                curva_idx = 0
+            else:
+                if curva_idx < 0 or curva_idx >= n_traces:
+                    curva_idx = 0
+                # tenta obter nome do trace (classificação)
+                try:
+                    classif_clicked = fig_stack.data[curva_idx].name
+                except Exception:
+                    # fallback se algo estranho ocorrer
+                    classif_clicked = df_stack["classificacao_aluno"].unique()[0]
+
+            # salva a seleção atual
+            st.session_state["ultima_selecao"] = {
+                "escola": escola_clicked,
+                "curve_idx": curva_idx,
+                "classif": classif_clicked
+            }
+
+        else:
+            # Não houve clique: usa a última seleção (se existir) ou defaults
+            ultima = st.session_state.get("ultima_selecao")
+            n_traces = len(fig_stack.data)
+            if ultima:
+                escola_clicked = ultima.get("escola", df_stack["escola_label"].iloc[0])
+                curva_idx = int(ultima.get("curve_idx", 0))
+                # valida curva_idx em relação aos traces atuais
+                if n_traces == 0:
+                    classif_clicked = df_stack["classificacao_aluno"].iloc[0]
+                    curva_idx = 0
+                else:
+                    if curva_idx < 0 or curva_idx >= n_traces:
+                        curva_idx = 0
+                    # tenta obter nome do trace (classificação)
+                    try:
+                        classif_clicked = fig_stack.data[curva_idx].name
+                    except Exception:
+                        classif_clicked = ultima.get("classif", df_stack["classificacao_aluno"].unique()[0])
+                        # tenta ajustar classif_clicked para um trace válido se possível
+                        if n_traces > 0:
+                            classif_clicked = fig_stack.data[0].name
+            else:
+                # primeira vez: usa o primeiro school_label e o primeiro trace
+                escola_clicked = df_stack["escola_label"].iloc[0]
+                curva_idx = 0
+                classif_clicked = fig_stack.data[0].name if len(fig_stack.data) > 0 else df_stack["classificacao_aluno"].iloc[0]
+                st.session_state["ultima_selecao"] = {
+                    "escola": escola_clicked,
+                    "curve_idx": curva_idx,
+                    "classif": classif_clicked
+                }
+
+    except Exception as e:
+        # Em caso de erro inesperado, define defaults seguros
+        logging.error(f"Erro ao processar seleção: {e}")
+        escola_clicked = df_stack["escola_label"].iloc[0]
+        curva_idx = 0
+        classif_clicked = fig_stack.data[0].name if len(fig_stack.data) > 0 else df_stack["classificacao_aluno"].iloc[0]
+        st.session_state["ultima_selecao"] = {"escola": escola_clicked, "curve_idx": curva_idx, "classif": classif_clicked}
+
+    # ---------------------------
+    # Ajustes e fallback se a combinação não existe (por exemplo, aquela classificação não tem alunos na escola)
+    # ---------------------------
+    escola_nome_real = escola_clicked.split(" (")[0]  # retira o label com média (como feito antes)
+
+    # Subconjunto com a escola selecionada
+    df_escola = df_filtrado[df_filtrado["escola_nome"] == escola_nome_real]
+    if df_escola.empty:
+        # Se não existem dados para essa escola (improvável), usa a primeira escola disponível
+        escola_nome_real = df_filtrado["escola_nome"].iloc[0]
+        escola_clicked = df_filtrado["escola_nome"].iloc[0] + f" ({df_filtrado.groupby('escola_nome')['avaliacao_classif'].mean().loc[escola_nome_real].round(1)} pts)" if not df_filtrado.empty else escola_clicked
+        df_escola = df_filtrado[df_filtrado["escola_nome"] == escola_nome_real]
+
+    # Verifica se a classificação escolhida existe para a escola; se não, pega a primeira classificação disponível para essa escola
+    if classif_clicked not in df_escola["classificacao_aluno"].unique():
+        opcoes = df_escola["classificacao_aluno"].unique()
+        if len(opcoes) > 0:
+            classif_clicked = opcoes[0]
+            # atualiza sessão
+            st.session_state["ultima_selecao"]["classif"] = classif_clicked
+
+    # ---------------------------
+    # Monta tabela final (apenas alunos da escola + classificação)
     # ---------------------------
     colunas_ilhas = [
         "pts_ilha_leitura", "pts_ilha_escrita", "pts_ilha_visual",
@@ -347,45 +463,49 @@ def dashboardPedegogico(email_hash=None):
 
     df_ilhas = df_filtrado[["aluno_nome", "escola_nome", "classificacao_aluno", "avaliacao_classif", "avaliacao_erros"] + colunas_ilhas]
 
-    # 🔹 Se não houver clique, simula seleção do primeiro ponto da barra
-    if selected_points:
-        ponto = selected_points[0]
-    else:
-        # Pega o primeiro trace (primeira classificação) e o primeiro ponto
-        ponto = {"y": df_stack["escola_label"].iloc[0], "curveNumber": 0}
-
-    escola_clicked = ponto["y"]                   # Nome da escola (vem do eixo Y)
-    curva_idx = ponto["curveNumber"]              # Índice do trace (classificação clicada)
-    classif_clicked = fig_stack.data[curva_idx].name  # Nome do trace = classificação
-
+    # aplica o filtro final
     df_ilhas = df_ilhas[
-        (df_ilhas["escola_nome"] == escola_clicked.split(" (")[0]) &
+        (df_ilhas["escola_nome"] == escola_nome_real) &
         (df_ilhas["classificacao_aluno"] == classif_clicked)
     ]
 
-    df_tabela = df_ilhas.groupby(["aluno_nome", "classificacao_aluno"], as_index=False).mean(numeric_only=True)
-    df_tabela[colunas_ilhas] = df_tabela[colunas_ilhas].round(1)
-    df_tabela["avaliacao_classif"] = df_tabela["avaliacao_classif"].round(1)
-    df_tabela = df_tabela.rename(columns={"avaliacao_classif": "Pontuação Geral"})
+    # Se ainda vazio, tenta qualquer aluno da escola (fallback)
+    if df_ilhas.empty:
+        df_ilhas = df_filtrado[df_filtrado["escola_nome"] == escola_nome_real][["aluno_nome", "escola_nome", "classificacao_aluno", "avaliacao_classif", "avaliacao_erros"] + colunas_ilhas]
+        # se mesmo assim vazio, mostra mensagem
+        if df_ilhas.empty:
+            with col2:
+                st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
+                st.info("Nenhum aluno encontrado para a seleção atual.")
+        else:
+            # pega primeira classificação disponível
+            classif_clicked = df_ilhas["classificacao_aluno"].iloc[0]
+            st.session_state["ultima_selecao"]["classif"] = classif_clicked
 
-    colunas_final = ["aluno_nome", "Pontuação Geral", "avaliacao_erros"] + colunas_ilhas
-    df_tabela = df_tabela[colunas_final]
-    df_tabela = df_tabela.rename(columns={"aluno_nome": "Aluno", **labels_ilhas})
+    # Agrupa e prepara a tabela
+    if not df_ilhas.empty:
+        df_tabela = df_ilhas.groupby(["aluno_nome", "classificacao_aluno"], as_index=False).mean(numeric_only=True)
+        df_tabela[colunas_ilhas] = df_tabela[colunas_ilhas].round(1)
+        df_tabela["avaliacao_classif"] = df_tabela["avaliacao_classif"].round(1)
+        df_tabela = df_tabela.rename(columns={"avaliacao_classif": "Pontuação Geral"})
 
-    def colorir_linha_por_pg(row):
-        cor = cor_por_pontuacao(row["Pontuação Geral"])
-        return [f'background-color: {cor}; color: black'] * len(row)
-    
-    df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
+        colunas_final = ["aluno_nome", "Pontuação Geral", "avaliacao_erros"] + colunas_ilhas
+        df_tabela = df_tabela[colunas_final]
+        df_tabela = df_tabela.rename(columns={"aluno_nome": "Aluno", **labels_ilhas})
 
-    with col2:
+        # função de estilo por pontuação
+        def colorir_linha_por_pg(row):
+            cor = cor_por_pontuacao(row["Pontuação Geral"])
+            return [f'background-color: {cor}; color: black'] * len(row)
+
+        df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
+
+        # Exibe no col2
+        with col2:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
-            st.dataframe(df_styled, use_container_width=True)
-
-
-
-
-
-
-
-
+            try:
+                # mantém seu estilo original (pode variar conforme versão do streamlit)
+                st.dataframe(df_styled, use_container_width=True)
+            except Exception:
+                # fallback: exibe DataFrame simples caso Styler não seja renderizado
+                st.dataframe(df_tabela, use_container_width=True)
