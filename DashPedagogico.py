@@ -312,8 +312,8 @@ def dashboardPedegogico(email_hash=None):
         ),
         hovermode="closest",
         showlegend=False,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
+        paper_bgcolor='lightgray',   # fundo total do gráfico
+        plot_bgcolor="white",   # fundo da área do gráfico
         autosize=True,
         xaxis=dict(
             title=dict(text="Quantidade de Alunos Avaliados", font=dict(size=16)),
