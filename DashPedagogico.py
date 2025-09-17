@@ -8,6 +8,7 @@ from sqlalchemy import text
 from config import engine  # importa a engine pronta
 from sqlalchemy.exc import OperationalError
 import logging
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 def dashboardPedegogico(email_hash=None):
@@ -29,11 +30,13 @@ def dashboardPedegogico(email_hash=None):
     [data-testid="stSidebar"] {
         background-color: #F5F5F5 !important;
         color: #000000 !important;
+        font-size: 16px !important;  /* ajuste o tamanho conforme desejar */
     }
 
     /* 🌟 Labels e textos da sidebar (filtros) */
     [data-testid="stSidebar"] label {
         color: #000000 !important;
+        font-size: 16px !important;  /* ajuste o tamanho conforme desejar */
     }
 
     /* 🌟 Inputs, selects, multiselects na sidebar */
@@ -45,6 +48,7 @@ def dashboardPedegogico(email_hash=None):
     [data-testid="stTabs"] button {
         background-color: #FFFFFF !important;
         color: #000000 !important;
+        font-size: 16px !important;  /* ajuste o tamanho conforme desejar */
     }
 
     /* 🌟 Hover das opções do select/multiselect */
@@ -105,22 +109,6 @@ def dashboardPedegogico(email_hash=None):
         outline: none !important;
         margin: 0 !important;
         padding: 0 !important;
-    }
-
-    /* 🌟 Título do gráfico no topo */
-    div[data-testid="stPlotlyChart"] .gtitle {
-        margin-top: 0 !important;
-        margin-bottom: 5px !important;
-        font-weight: bold;
-        color: #000000;
-    }
-
-    /* 🌟 Eixos do gráfico */
-    div[data-testid="stPlotlyChart"] .plotly .xaxis, 
-    div[data-testid="stPlotlyChart"] .plotly .yaxis {
-        gridcolor: #EDEDED !important;
-        zerolinecolor: #EDEDED !important;
-        color: #000000 !important;
     }
 
     </style>
@@ -317,13 +305,32 @@ def dashboardPedegogico(email_hash=None):
     )
 
     fig_stack.update_layout(
-        yaxis=dict(title="", automargin=True),
-        xaxis=dict(title="Quantidade de Alunos Avaliados", automargin=True),
+        title=dict(
+            text="Classificatório por Escola e Alunos - Clique na Barra para Detalhar",
+            font=dict(size=24),     # tamanho do título principal
+            x=0.5,                  # centraliza o título horizontalmente
+            xanchor='center'
+        ),
         hovermode="closest",
         showlegend=False,
         paper_bgcolor="white",
         plot_bgcolor="white",
-        autosize=True
+        autosize=True,
+        xaxis=dict(
+            title=dict(text="Quantidade de Alunos Avaliados", font=dict(size=18)),
+            tickfont=dict(size=16),
+            automargin=True
+        ),
+        yaxis=dict(
+            title=dict(text=""),  
+            tickfont=dict(size=16),
+            automargin=True
+        )
+    )
+
+    fig_stack.update_traces(
+        textfont=dict(size=16, color="black"),  # tamanho e cor do texto sobre as barras
+        insidetextanchor="middle"               # opcional: centraliza o texto dentro da barra
     )
 
     # ---------------------------
@@ -497,7 +504,7 @@ def dashboardPedegogico(email_hash=None):
         def colorir_linha_por_pg(row):
             cor = cor_por_pontuacao(row["Pontuação Geral"])
             return [f'background-color: {cor}; color: black'] * len(row)
-
+        
         df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
 
         # Exibe no col2
@@ -509,3 +516,5 @@ def dashboardPedegogico(email_hash=None):
             except Exception:
                 # fallback: exibe DataFrame simples caso Styler não seja renderizado
                 st.dataframe(df_tabela, use_container_width=True)
+
+        
