@@ -312,9 +312,10 @@ def dashboardPedegogico(email_hash=None):
         ),
         hovermode="closest",
         showlegend=False,
-        paper_bgcolor='lightgray',   # fundo total do gráfico
+        paper_bgcolor='white',   # fundo total do gráfico quando quiser testa use essa cor lightgray
         plot_bgcolor="white",   # fundo da área do gráfico
         autosize=True,
+        margin=dict(l=10, r=0, t=80, b=80),
         xaxis=dict(
             title=dict(text="Quantidade de Alunos Avaliados", font=dict(size=16)),
             tickfont=dict(size=14),
