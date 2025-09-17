@@ -8,7 +8,6 @@ from sqlalchemy import text
 from config import engine  # importa a engine pronta
 from sqlalchemy.exc import OperationalError
 import logging
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 def dashboardPedegogico(email_hash=None):
