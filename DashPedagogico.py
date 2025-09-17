@@ -306,7 +306,7 @@ def dashboardPedegogico(email_hash=None):
     fig_stack.update_layout(
         title=dict(
             text="Classificatório por Escola e Alunos - Clique na Barra para Detalhar",
-            font=dict(size=24),     # tamanho do título principal
+            font=dict(size=20),     # tamanho do título principal
             x=0.5,                  # centraliza o título horizontalmente
             xanchor='center'
         ),
@@ -316,19 +316,19 @@ def dashboardPedegogico(email_hash=None):
         plot_bgcolor="white",
         autosize=True,
         xaxis=dict(
-            title=dict(text="Quantidade de Alunos Avaliados", font=dict(size=18)),
-            tickfont=dict(size=16),
+            title=dict(text="Quantidade de Alunos Avaliados", font=dict(size=16)),
+            tickfont=dict(size=14),
             automargin=True
         ),
         yaxis=dict(
             title=dict(text=""),  
-            tickfont=dict(size=16),
+            tickfont=dict(size=14),
             automargin=True
         )
     )
 
     fig_stack.update_traces(
-        textfont=dict(size=16, color="black"),  # tamanho e cor do texto sobre as barras
+        textfont=dict(size=14, color="black"),  # tamanho e cor do texto sobre as barras
         insidetextanchor="middle"               # opcional: centraliza o texto dentro da barra
     )
 
