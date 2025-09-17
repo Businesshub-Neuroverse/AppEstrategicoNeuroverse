@@ -116,7 +116,7 @@ def dashboardPedegogico(email_hash=None):
     # -------------------------
     # Layout da Página
     # -------------------------
-    st.set_page_config(page_title="Dash Pedagógico", page_icon="assets/favicon.ico", layout="wide")
+    st.set_page_config(page_title="Dash Pedagógico", page_icon="assets/favicon.ico", layout="wide", initial_sidebar_state="expanded")
     st.title("📊 Desempenho Geral Pedagógico")
 
     query = text("""
@@ -518,3 +518,4 @@ def dashboardPedegogico(email_hash=None):
                 st.dataframe(df_tabela, use_container_width=True)
 
         
+
