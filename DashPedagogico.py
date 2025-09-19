@@ -109,13 +109,13 @@ def dashboardPedegogico(email_hash=None):
     if "selecoes" not in st.session_state:
         st.session_state.selecoes = {escola: False for escola in df["escola_nome"].unique()}
 
-    col1, col2 = st.columns([2, 4])  # Col1: checkboxes, Col2: botões
+    col1, col2 = st.columns([2, 6])  # Col1: checkboxes, Col2: botões
 
     # ---------------------------
     # 🔹 Campo de busca
     # ---------------------------
     busca = col1.text_input("🔍 Buscar escola")
-    col1.write("Selecione ao menos uma escola ao lado para visualizar o gráfico.")
+    col1.write("Selecione uma escola para visualizar o gráfico.")
 
     # Filtra escolas
     todas_escolas = df["escola_nome"].unique()
