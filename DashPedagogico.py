@@ -25,89 +25,54 @@ def dashboardPedegogico(email_hash=None):
         margin-top: 0 !important;
     }
 
-    /* 🌟 Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #F5F5F5 !important;
-        color: #000000 !important;
-        font-size: 16px !important;  /* ajuste o tamanho conforme desejar */
+    /* Seleciona todos os inputs de texto */
+    .stTextInput > div > div > input {
+        border: 2px solid #4CAF50;      /* cor da borda */
+        border-radius: 8px;              /* cantos arredondados */
+        padding: 8px;                    /* espaço interno */
+        outline: none;
     }
 
-    /* 🌟 Labels e textos da sidebar (filtros) */
-    [data-testid="stSidebar"] label {
-        color: #000000 !important;
-        font-size: 16px !important;  /* ajuste o tamanho conforme desejar */
+    /* Borda muda de cor ao focar */
+    .stTextInput > div > div > input:focus {
+        border: 2px solid #2196F3;
+        box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+    }
+    
+    /* Esconde os checkboxes padrão */
+    div[data-testid="stCheckbox"] input[type="checkbox"] {
+        display: none;
     }
 
-    /* 🌟 Inputs, selects, multiselects na sidebar */
-    .stSelectbox div[data-baseweb="select"],
-    .stMultiSelect div[data-baseweb="select"],
-    .stSlider > div > div > div,
-    .stRadio div[role="radiogroup"] label,
-    .stCheckbox div[role="checkbox"] label,
-    [data-testid="stTabs"] button {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        font-size: 16px !important;  /* ajuste o tamanho conforme desejar */
+    /* Torna o container flexível para alinhar horizontalmente */
+    div[data-testid="stCheckbox"] {
+        display: inline-flex;
+        align-items: center;   /* alinha verticalmente no centro */
     }
 
-    /* 🌟 Hover das opções do select/multiselect */
-    .stSelectbox div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover,
-    .stMultiSelect div[data-baseweb="popover"] div[role="listbox"] div[role="option"]:hover {
-        background-color: #F0F0F0 !important;
-        color: #000000 !important;
+    /* Label como "pill" */
+    div[data-testid="stCheckbox"] label {
+        display: inline-flex;         /* permite conteúdo na mesma linha */
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        background-color: #f0f0f0;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        white-space: nowrap;          /* impede quebra de linha */
     }
 
-    /* 🌟 Tags selecionadas do multiselect */
-    .stMultiSelect div[data-baseweb="tag"] {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: 1px solid #CED4DA !important;
+    /* Ao passar o mouse */
+    div[data-testid="stCheckbox"] label:hover {
+        background-color: #e0e0e0;
     }
 
-    /* 🌟 Containers internos (gráficos, tabelas, metric cards) */
-    .css-1d391kg,
-    .css-1kyxreq,
-    .css-1v3fvcr,
-    .stDataFrame,
-    .stTable,
-    div[data-testid="stMetricContainer"] {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        border: none !important;
-    }
-
-    /* 🌟 Reset Plotly / plotly_events container + iframe */
-    div[data-testid="stPlotlyChart"],
-    div[data-testid="stPlotlyChart"] > div,
-    div[data-testid="stPlotlyChart"] iframe,
-    iframe.stCustomComponentV1,
-    .st-emotion-cache {
-        background-color: #FFFFFF !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* 🌟 Fundo da plot area */
-    div[data-testid="stPlotlyChart"] .plotly .cartesianlayer,
-    div[data-testid="stPlotlyChart"] .plotly .bg,
-    div[data-testid="stPlotlyChart"] .plotly .subplot {
-        background-color: #FFFFFF !important;
-    }
-
-    /* 🌟 Remove bordas pretas externas e padding residual */
-    div[data-testid="stPlotlyChart"] > div,
-    div[data-testid="stPlotlyChart"] iframe,
-    .st-emotion-cache,
-    .stPlotlyChartContainer {
-        background-color: #FFFFFF !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
+    /* Quando selecionado */
+    div[data-testid="stCheckbox"] input[type="checkbox"]:checked + div label {
+        background-color: #4CAF50;
+        color: white;
+        border-color: #4CAF50;
     }
 
     </style>
@@ -118,7 +83,7 @@ def dashboardPedegogico(email_hash=None):
     # -------------------------
     st.set_page_config(page_title="Dash Pedagógico", page_icon="assets/favicon.ico", layout="wide", initial_sidebar_state="expanded")
     st.title("📊 Desempenho Geral Pedagógico")
-
+    #st.write("teste")
     query = text("""
     SELECT 
         u.email_hash AS hash_email,
@@ -175,24 +140,76 @@ def dashboardPedegogico(email_hash=None):
         st.stop()
 
     # ---------------------------
-    # 🔹 Filtros na barra lateral
+    # 🔹 Inicializa estado das seleções
     # ---------------------------
-    st.sidebar.header("Filtros")
+    if "selecoes" not in st.session_state:
+        st.session_state.selecoes = {escola: False for escola in df["escola_nome"].unique()}
 
-    filtro_classificacao = st.sidebar.multiselect(
-        "Pesquisar por Classificação",
-        options=df["classificacao_aluno"].unique(),
-        placeholder="Selecione uma ou mais"
-    )
+    col1, col2 = st.columns([2, 4])  # Col1: checkboxes, Col2: botões
 
-    filtro_escola = st.sidebar.multiselect(
-        "Pesquisar por Escola",
-        options=df["escola_nome"].unique(),
-        placeholder="Selecione uma ou mais"
-    )
+    # ---------------------------
+    # 🔹 Campo de busca
+    # ---------------------------
+    busca = col1.text_input("🔍 Buscar escola")
+    col1.write("Selecione ao menos uma escola ao lado para visualizar o gráfico.")
 
-    # Cards coloridos de referência
-    st.sidebar.subheader("Referência - Classificação")
+    # Filtra escolas
+    todas_escolas = df["escola_nome"].unique()
+    if busca:
+        escolas_visiveis = [e for e in todas_escolas if busca.lower() in e.lower()]
+    else:
+        escolas_visiveis = todas_escolas
+
+    # ---------------------------
+    # 🔹 Botões Selecionar tudo / Limpar tudo
+    # ---------------------------
+    if col1.button("✅ Selecionar tudo"):
+        for e in escolas_visiveis:
+            st.session_state.selecoes[e] = True
+            # Remove a key para forçar rerender do checkbox
+            if e in st.session_state:
+                del st.session_state[e]
+
+    if col1.button("🗑️ Limpar tudo"):
+        for e in st.session_state.selecoes.keys():
+            st.session_state.selecoes[e] = False
+            # Remove a key para forçar rerender do checkbox
+            if e in st.session_state:
+                del st.session_state[e]
+
+    # ---------------------------
+    # 🔹 Exibe checkboxes em col1
+    # ---------------------------
+    for escola in escolas_visiveis:
+        st.session_state.selecoes[escola] = col2.checkbox(
+            escola,
+            value=st.session_state.selecoes[escola],
+            key=escola
+        )
+
+    # ---------------------------
+    # 🔹 Lista final de selecionadas
+    # ---------------------------
+    selecionadas = [e for e, marcado in st.session_state.selecoes.items() if marcado]
+
+    # ---------------------------
+    # Filtrar DataFrame
+    # ---------------------------
+    df_filtrado = df.copy()
+
+    # Mostra gráfico ou mensagem apenas se houver ao menos uma escola selecionada
+    if selecionadas:
+        #st.write(f"Escolas selecionadas: {selecionadas}")
+        df_filtrado = df_filtrado[df_filtrado["escola_nome"].isin(list(selecionadas))]
+    else:
+        st.stop()
+
+    # -----------------------------
+    # Layout principal
+    # -----------------------------
+    col3 = st.columns(1)[0]
+    col4 = st.columns(1)[0]
+
     classes = {
         "Muito Acima do Esperado": "#4AA63B",
         "Acima do Esperado": "#5ACF47",
@@ -202,52 +219,6 @@ def dashboardPedegogico(email_hash=None):
         "Déficit moderado": "#FF7E7E",
         "Déficit grave": "#FF3A3A",
     }
-
-    faixas_classificacao = {
-        "Muito Acima do Esperado": "<=5",
-        "Acima do Esperado": ">5 e <=8",
-        "Dentro do Esperado": ">8 e <=14",
-        "Alerta para Déficit": ">14 e <=18",
-        "Déficit leve": ">18 e <=31",
-        "Déficit moderado": ">31 e <=44",
-        "Déficit grave": ">45 e <=100",
-    }
-
-    for nome, cor in classes.items():
-        faixa = faixas_classificacao[nome]
-        st.sidebar.markdown(
-            f"""
-            <div style='background-color:{cor}; 
-                        padding:3px; 
-                        border-radius:8px; 
-                        margin-bottom:6px; 
-                        font-size:12px; 
-                        color:black; 
-                        font-weight:bold;
-                        text-align:center;'>{nome} <span style='font-weight:normal;'>{faixa} Pts</span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # ---------------------------
-    # Filtrar DataFrame
-    # ---------------------------
-    df_filtrado = df.copy()
-    if filtro_classificacao:
-        df_filtrado = df_filtrado[df_filtrado["classificacao_aluno"].isin(filtro_classificacao)]
-    if filtro_escola:
-        df_filtrado = df_filtrado[df_filtrado["escola_nome"].isin(filtro_escola)]
-
-    if df_filtrado.empty:
-        st.info("Sem dados para os filtros selecionados.")
-        st.stop()
-
-    # -----------------------------
-    # Layout principal
-    # -----------------------------
-    col1 = st.columns(1)[0]
-    col2 = st.columns(1)[0]
 
     # ---------------------------
     # Função para cor pela pontuação
@@ -336,7 +307,7 @@ def dashboardPedegogico(email_hash=None):
     # ---------------------------
     # Captura clique com plotly_events
     # ---------------------------
-    with col1:
+    with col3:
         selected_points = plotly_events(
             fig_stack,
             select_event=True,
@@ -508,7 +479,7 @@ def dashboardPedegogico(email_hash=None):
         df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
 
         # Exibe no col2
-        with col2:
+        with col4:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             try:
                 # mantém seu estilo original (pode variar conforme versão do streamlit)
@@ -518,4 +489,3 @@ def dashboardPedegogico(email_hash=None):
                 st.dataframe(df_tabela, use_container_width=True)
 
         
-
