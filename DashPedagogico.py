@@ -38,42 +38,6 @@ def dashboardPedegogico(email_hash=None):
         border: 2px solid #2196F3;
         box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
     }
-    
-    /* Esconde os checkboxes padrão */
-    div[data-testid="stCheckbox"] input[type="checkbox"] {
-        display: none;
-    }
-
-    /* Torna o container flexível para alinhar horizontalmente */
-    div[data-testid="stCheckbox"] {
-        display: inline-flex;
-        align-items: center;   /* alinha verticalmente no centro */
-    }
-
-    /* Label como "pill" */
-    div[data-testid="stCheckbox"] label {
-        display: inline-flex;         /* permite conteúdo na mesma linha */
-        align-items: center;
-        padding: 8px 16px;
-        border-radius: 10px;
-        border: 1px solid #ccc;
-        background-color: #f0f0f0;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        white-space: nowrap;          /* impede quebra de linha */
-    }
-
-    /* Ao passar o mouse */
-    div[data-testid="stCheckbox"] label:hover {
-        background-color: #e0e0e0;
-    }
-
-    /* Quando selecionado */
-    div[data-testid="stCheckbox"] input[type="checkbox"]:checked + div label {
-        background-color: #4CAF50;
-        color: white;
-        border-color: #4CAF50;
-    }
 
     </style>
     """, unsafe_allow_html=True)
@@ -181,7 +145,7 @@ def dashboardPedegogico(email_hash=None):
     # 🔹 Exibe checkboxes em col1
     # ---------------------------
     for escola in escolas_visiveis:
-        st.session_state.selecoes[escola] = col2.checkbox(
+        st.session_state.selecoes[escola] = col1.checkbox(
             escola,
             value=st.session_state.selecoes[escola],
             key=escola
@@ -208,7 +172,6 @@ def dashboardPedegogico(email_hash=None):
     # Layout principal
     # -----------------------------
     col3 = st.columns(1)[0]
-    col4 = st.columns(1)[0]
 
     classes = {
         "Muito Acima do Esperado": "#4AA63B",
@@ -307,7 +270,7 @@ def dashboardPedegogico(email_hash=None):
     # ---------------------------
     # Captura clique com plotly_events
     # ---------------------------
-    with col3:
+    with col2:
         selected_points = plotly_events(
             fig_stack,
             select_event=True,
@@ -479,7 +442,7 @@ def dashboardPedegogico(email_hash=None):
         df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
 
         # Exibe no col2
-        with col4:
+        with col3:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             try:
                 # mantém seu estilo original (pode variar conforme versão do streamlit)
