@@ -47,7 +47,7 @@ def dashboardPedegogico(email_hash=None):
     # -------------------------
     st.set_page_config(page_title="Dash Pedagógico", page_icon="assets/favicon.ico", layout="wide", initial_sidebar_state="expanded")
     st.title("📊 Desempenho Geral Pedagógico")
-    #st.write("teste")
+
     query = text("""
     SELECT 
         u.email_hash AS hash_email,
@@ -109,13 +109,14 @@ def dashboardPedegogico(email_hash=None):
     if "selecoes" not in st.session_state:
         st.session_state.selecoes = {escola: False for escola in df["escola_nome"].unique()}
 
-    col1, col2 = st.columns([2, 6])  # Col1: checkboxes, Col2: botões
+    col0 = st.columns(1)[0]
+    col1 = st.columns(1)[0]
+    col2, col3 = st.columns([2, 2])  # Col1: checkboxes, Col2: botões
 
     # ---------------------------
     # 🔹 Campo de busca
     # ---------------------------
-    busca = col1.text_input("🔍 Buscar escola")
-    col1.write("Selecione uma escola para visualizar o gráfico.")
+    busca = col0.text_input("🔍 Buscar escola")
 
     # Filtra escolas
     todas_escolas = df["escola_nome"].unique()
@@ -127,25 +128,27 @@ def dashboardPedegogico(email_hash=None):
     # ---------------------------
     # 🔹 Botões Selecionar tudo / Limpar tudo
     # ---------------------------
-    if col1.button("✅ Selecionar tudo"):
+    if col3.button("✅ Selecionar tudo"):
         for e in escolas_visiveis:
             st.session_state.selecoes[e] = True
             # Remove a key para forçar rerender do checkbox
             if e in st.session_state:
                 del st.session_state[e]
 
-    if col1.button("🗑️ Limpar tudo"):
+    if col3.button("🗑️ Limpar tudo"):
         for e in st.session_state.selecoes.keys():
             st.session_state.selecoes[e] = False
             # Remove a key para forçar rerender do checkbox
             if e in st.session_state:
                 del st.session_state[e]
 
+    
     # ---------------------------
     # 🔹 Exibe checkboxes em col1
     # ---------------------------
+    col1.write("✅ Selecione ao menos uma escola abaixo para visualizar o gráfico.")
     for escola in escolas_visiveis:
-        st.session_state.selecoes[escola] = col1.checkbox(
+        st.session_state.selecoes[escola] = col2.checkbox(
             escola,
             value=st.session_state.selecoes[escola],
             key=escola
@@ -171,7 +174,8 @@ def dashboardPedegogico(email_hash=None):
     # -----------------------------
     # Layout principal
     # -----------------------------
-    col3 = st.columns(1)[0]
+    col4 = st.columns(1)[0]
+    col5 = st.columns(1)[0]
 
     classes = {
         "Muito Acima do Esperado": "#4AA63B",
@@ -270,7 +274,7 @@ def dashboardPedegogico(email_hash=None):
     # ---------------------------
     # Captura clique com plotly_events
     # ---------------------------
-    with col2:
+    with col4:
         selected_points = plotly_events(
             fig_stack,
             select_event=True,
@@ -442,7 +446,7 @@ def dashboardPedegogico(email_hash=None):
         df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
 
         # Exibe no col2
-        with col3:
+        with col5:
             st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
             try:
                 # mantém seu estilo original (pode variar conforme versão do streamlit)
