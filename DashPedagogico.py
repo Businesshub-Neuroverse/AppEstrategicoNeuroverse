@@ -181,7 +181,7 @@ def dashboardPedegogico(email_hash=None):
         "Muito Acima do Esperado": "#4AA63B",
         "Acima do Esperado": "#5ACF47",
         "Dentro do Esperado": "#A3ED97",
-        "Abaixo do Esperado": "#FFCD32",
+        "Abaixo do esperado": "#FFCD32",
         "Alerta leve": "#FCA106",
         "Alerta moderado": "#FF7E7E",
         "Alerta grave": "#FF3A3A",
@@ -456,4 +456,5 @@ def dashboardPedegogico(email_hash=None):
                 st.dataframe(df_tabela, use_container_width=True)
 
         
+
 
