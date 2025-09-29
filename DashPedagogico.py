@@ -456,6 +456,3 @@ def dashboardPedegogico(email_hash=None):
                 st.dataframe(df_tabela, use_container_width=True)
 
         
-
-
-
