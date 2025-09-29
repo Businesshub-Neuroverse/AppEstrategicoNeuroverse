@@ -117,6 +117,7 @@ def dashboardPedegogico(email_hash=None):
     # 🔹 Campo de busca
     # ---------------------------
     busca = col0.text_input("🔍 Buscar escola")
+    st.write("Teste")
 
     # Filtra escolas
     todas_escolas = df["escola_nome"].unique()
@@ -456,3 +457,4 @@ def dashboardPedegogico(email_hash=None):
                 st.dataframe(df_tabela, use_container_width=True)
 
         
+
