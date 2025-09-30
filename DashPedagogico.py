@@ -91,7 +91,6 @@ def dashboardPedegogico(email_hash=None):
     # ---------------------------
     #col0, col1 = st.columns([2, 2])
     col0 = st.columns(1)[0]
-    col1 = st.columns(1)[0]
 
     busca = col0.text_input("🔍 Buscar escola")
     todas_escolas = df["escola_nome"].unique()
@@ -230,4 +229,5 @@ def dashboardPedegogico(email_hash=None):
     # Exibe gráfico e tabela
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
-    st.dataframe(df_styled, use_container_width=True)
+    st.dataframe(df_styled)
+
