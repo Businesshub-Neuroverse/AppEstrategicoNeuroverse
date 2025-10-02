@@ -7,3 +7,6 @@ numpy
 python-dotenv
 bcrypt
 streamlit_plotly_events
+cv2
+deepface
+google.cloud
