@@ -38,8 +38,8 @@ email_hash = unquote(params.get("email_hash", "")) # Lê o parâmetro 'email_has
 pagina = unquote(params.get("page", ""))           # Lê o parâmetro 'page' e decodifica, se existir
 
 # Exibe os valores capturados na tela (para depuração)
-#st.write("Parâmetro email_hash:", email_hash)
-#st.write("Parâmetro page:", pagina)
+st.write("Parâmetro email_hash:", email_hash)
+st.write("Parâmetro page:", pagina)
 
 # -----------------------
 # Lógica de roteamento: decide o que exibir com base no parâmetro 'page'
@@ -49,7 +49,7 @@ if pagina == "dash_ped":                                # Se a página solicitad
         st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
         st.stop()                                       # E para a execução da aplicação
     else:
-        dpe.dashboardPedegogico(email_hash)    
+        dp.dashboardPedegogico(email_hash)    
 elif pagina == "analise_sentimento":   
            # Caso contrário, carrega o dashboard pedagógico
     if not email_hash:                                  # ... mas não houver 'email_hash' informado...
@@ -61,6 +61,7 @@ else:
     # Caso 'page' não seja 'dash_ped' ou não exista, mostra mensagem de erro
     st.error("Parâmetro 'page' não fornecido ou página não encontrada!")
     st.stop()  # Para a execução da aplicação
+
 
 
 
