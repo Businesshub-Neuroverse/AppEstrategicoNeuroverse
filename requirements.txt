@@ -7,8 +7,9 @@ numpy
 python-dotenv
 bcrypt
 streamlit_plotly_events
-opencv-python
+opencv-python-headless
 deepface
 google.cloud
+
 
 
