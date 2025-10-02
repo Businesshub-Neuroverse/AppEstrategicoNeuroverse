@@ -9,7 +9,7 @@ from config import engine
 from sqlalchemy.exc import OperationalError
 import logging
 
-def dashboardPedegogico(email_hash=None):
+def dashboardPedagogico(email_hash=None):
 
     # ---------------------------
     # Estilo da página
@@ -230,4 +230,5 @@ def dashboardPedegogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
