@@ -9,7 +9,8 @@ python-dotenv
 bcrypt
 streamlit_plotly_events
 deepface
-google.cloud
+google-cloud-storage
+
 
 
 
