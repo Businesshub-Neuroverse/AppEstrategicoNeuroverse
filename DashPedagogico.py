@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 import logging
 
 def dashboardPedagogico(email_hash=None):
-
+    st.write("entrou no dash")
     # ---------------------------
     # Estilo da página
     # ---------------------------
@@ -230,5 +230,6 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
 
