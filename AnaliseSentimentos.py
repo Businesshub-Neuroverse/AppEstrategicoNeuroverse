@@ -12,7 +12,7 @@ import logging
 
 
 def analiseDeSentimentos(email_hash=None):
-
+    st.write("entrou no sentimento")
     # ================================
     # 🎨 Estilo da página
     # ================================
@@ -191,3 +191,4 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
