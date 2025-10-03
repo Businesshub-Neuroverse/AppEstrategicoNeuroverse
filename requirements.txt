@@ -8,8 +8,11 @@ numpy
 python-dotenv
 bcrypt
 streamlit_plotly_events
+tensorflow==2.20.0
+tf-keras
 deepface
 google-cloud-storage
+
 
 
 
