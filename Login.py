@@ -34,8 +34,8 @@ email_hash = unquote(params.get("email_hash", "")) # Lê o parâmetro 'email_has
 pagina = unquote(params.get("page", ""))           # Lê o parâmetro 'page' e decodifica, se existir
 
 # Exibe os valores capturados na tela (para depuração)
-st.write("Parâmetro email_hash:", email_hash)
-st.write("Parâmetro page:", pagina)
+#st.write("Parâmetro email_hash:", email_hash)
+#st.write("Parâmetro page:", pagina)
 
 # -----------------------
 # Lógica de roteamento: decide o que exibir com base no parâmetro 'page'
@@ -59,6 +59,7 @@ else:
     # Caso 'page' não seja 'dash_ped' ou não exista, mostra mensagem de erro
     st.error("Parâmetro 'page' não fornecido ou página não encontrada!")
     st.stop()  # Para a execução da aplicação
+
 
 
 
