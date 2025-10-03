@@ -9,7 +9,7 @@ from sqlalchemy import text
 from config import engine
 from sqlalchemy.exc import OperationalError
 import logging
-st.write("fez os imports")
+
 def analiseDeSentimentos(email_hash=None):
     st.write("entrou no sentimento")
     # ================================
@@ -88,7 +88,7 @@ def analiseDeSentimentos(email_hash=None):
     #client = storage.Client.from_service_account_json("chave_gcp.json")
     st.write("teste antes do cliete google")
     client = storage.Client()
-    st.write("teste DEPOIS do cliete google", client)
+   
     #st.dataframe(df)
     # ================================
     # Quebra imagens em várias linhas
@@ -193,6 +193,7 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
 
 
