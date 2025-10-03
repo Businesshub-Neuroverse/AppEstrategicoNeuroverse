@@ -1,5 +1,3 @@
-opencv-python-headless
---extra-index-url https://pypi.org/simple
 streamlit
 pandas
 plotly
@@ -11,6 +9,7 @@ bcrypt
 streamlit_plotly_events
 deepface
 google.cloud
+
 
 
 
