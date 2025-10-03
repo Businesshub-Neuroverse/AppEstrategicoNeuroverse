@@ -1,9 +1,6 @@
 # Importa as bibliotecas necessárias
 import streamlit as st                 # Biblioteca principal para criar aplicações web interativas em Python
-import DashPedagogico as dp     # Módulo (arquivo .py) que contém a função dashboardPedegogico
-st.write("import dash ok falta o análise")
-import AnaliseSentimentos as ans    # Módulo (arquivo .py) que contém a função analiseDeSentimentos
-st.write("import análise ok")
+st.write("import streamlit ok")
 from urllib.parse import unquote       # Função para decodificar parâmetros da URL (ex: remover %20 e etc.)
 
 # -----------------------
@@ -49,6 +46,7 @@ if pagina == "dash_ped":                                # Se a página solicitad
         st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
         st.stop()                                       # E para a execução da aplicação
     else:
+        import DashPedagogico as dp     # Módulo (arquivo .py) que contém a função dashboardPedegogico
         dp.dashboardPedagogico(email_hash)    
 elif pagina == "analise_sentimento":   
            # Caso contrário, carrega o dashboard pedagógico
@@ -56,11 +54,13 @@ elif pagina == "analise_sentimento":
         st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
         st.stop()                                       # E para a execução da aplicação
     else:
+        import AnaliseSentimentos as ans    # Módulo (arquivo .py) que contém a função analiseDeSentimentos
         ans.analiseDeSentimentos(email_hash)    
 else:
     # Caso 'page' não seja 'dash_ped' ou não exista, mostra mensagem de erro
     st.error("Parâmetro 'page' não fornecido ou página não encontrada!")
     st.stop()  # Para a execução da aplicação
+
 
 
 
