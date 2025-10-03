@@ -3,7 +3,9 @@
 # ---------------------------
 
 # Imagem base oficial do Python
-FROM python:3.11-slim
+#FROM python:3.11-slim
+FROM python:3.10-bullseye
+
 
 # Instalar dependências do sistema necessárias para o OpenCV e libs gráficas
 RUN apt-get update && apt-get install -y \
@@ -32,5 +34,6 @@ EXPOSE 8080
 
 # Comando de execução (ajustado para rodar Streamlit na porta 8080)
 CMD ["streamlit", "run", "Login.py", "--server.port=8080", "--server.address=0.0.0.0", "--server.headless=true"]
+
 
 
