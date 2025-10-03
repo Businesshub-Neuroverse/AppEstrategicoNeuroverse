@@ -10,7 +10,8 @@ streamlit_plotly_events
 deepface
 google.cloud
 opencv-python==0.0.0
-opencv-python-headless==4.10.0.84
+opencv-python-headless
+
 
 
 
