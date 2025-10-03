@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
+st.write("antes do cv2")
 import cv2
+st.write("depois do cv2")
 from google.cloud import storage
 from deepface import DeepFace
 import numpy as np
@@ -191,4 +193,5 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
