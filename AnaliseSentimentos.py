@@ -3,6 +3,7 @@ import pandas as pd
 import cv2
 from google.cloud import storage
 from deepface import DeepFace
+st.write("depois de importar deepface")
 import numpy as np
 import matplotlib.pyplot as plt
 from sqlalchemy import text
@@ -191,6 +192,7 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
 
 
