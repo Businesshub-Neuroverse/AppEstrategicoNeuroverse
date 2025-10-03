@@ -5,9 +5,9 @@
 # Imagem base oficial do Python
 FROM python:3.11-slim
 
-# Instalar dependências do sistema necessárias para o OpenCV
+# Instalar dependências do sistema necessárias para o OpenCV e libs gráficas
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     build-essential \
  && rm -rf /var/lib/apt/lists/*
@@ -32,4 +32,5 @@ EXPOSE 8080
 
 # Comando de execução (ajustado para rodar Streamlit na porta 8080)
 CMD ["streamlit", "run", "Login.py", "--server.port=8080", "--server.address=0.0.0.0", "--server.headless=true"]
+
 
