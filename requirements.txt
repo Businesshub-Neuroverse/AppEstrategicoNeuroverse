@@ -1,5 +1,6 @@
 streamlit
 pandas
+opencv-python-headless
 plotly
 sqlalchemy
 psycopg2-binary
@@ -9,6 +10,7 @@ bcrypt
 streamlit_plotly_events
 deepface
 google.cloud
+
 
 
 
