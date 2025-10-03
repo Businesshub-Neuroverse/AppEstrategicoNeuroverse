@@ -12,17 +12,20 @@ import logging
 
 def analiseDeSentimentos(email_hash=None):
 
-    # ================================
-    # 🎨 Estilo da página
-    # ================================
+    # ---------------------------
+    # Estilo da página
+    # ---------------------------
     st.markdown("""
     <style>
-    [data-testid="stHeader"], div[role="banner"] {
-        display: none !important;
-    }
+    [data-testid="stHeader"], div[role="banner"] { display: none !important; }
     body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
-        padding-top: 0 !important;
-        margin-top: 0 !important;
+        padding-top: 0 !important; margin-top: 0 !important;
+    }
+    .stTextInput > div > div > input {
+        border: 2px solid #4CAF50; border-radius: 8px; padding: 8px; outline: none;
+    }
+    .stTextInput > div > div > input:focus {
+        border: 2px solid #2196F3; box-shadow: 0 0 5px rgba(33,150,243,0.5);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -192,6 +195,7 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
 
 
