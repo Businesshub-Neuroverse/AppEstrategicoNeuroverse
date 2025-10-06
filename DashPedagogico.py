@@ -10,10 +10,11 @@ from sqlalchemy.exc import OperationalError
 import logging
 
 def dashboardPedagogico(email_hash=None):
- 
+    
     # ---------------------------
     # Estilo da página
     # ---------------------------
+    st.write("novo teste")
     st.markdown("""
     <style>
     [data-testid="stHeader"], div[role="banner"] { display: none !important; }
@@ -230,6 +231,7 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
 
 
