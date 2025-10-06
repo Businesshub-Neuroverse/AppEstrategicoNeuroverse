@@ -4,28 +4,66 @@ import cv2
 from google.cloud import storage
 from deepface import DeepFace
 import numpy as np
-import matplotlib.pyplot as plt
 from sqlalchemy import text
 from config import engine
 from sqlalchemy.exc import OperationalError
 import logging
+import matplotlib.pyplot as plt
+
+# ================================
+# 🎯 Funções com cache
+# ================================
+
+@st.cache_data(show_spinner=False)
+def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
+    """
+    Faz download de uma imagem do GCS e retorna os bytes.
+    Cacheada para evitar múltiplos downloads da mesma imagem.
+    """
+    client = storage.Client()  # GOOGLE_APPLICATION_CREDENTIALS deve estar configurada no ambiente
+    #client = storage.Client.from_service_account_json("chave_gcp.json")
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(file_name)
+    return blob.download_as_bytes()
+
+
+@st.cache_data(show_spinner=False)
+def analisar_emocao(img_bytes: bytes):
+    """
+    Analisa a emoção dominante usando DeepFace com backend MTCNN.
+    Cacheada para evitar reprocessar as mesmas imagens.
+    """
+    nparr = np.frombuffer(img_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    resultados = DeepFace.analyze(
+        img,
+        actions=['emotion'],
+        detector_backend="mtcnn",
+        enforce_detection=True
+    )
+
+    if isinstance(resultados, dict):
+        resultados = [resultados]
+
+    return resultados, img
+
+
+# ================================
+# 🧠 Função principal
+# ================================
 
 def analiseDeSentimentos(email_hash=None):
 
-    # ---------------------------
     # Estilo da página
-    # ---------------------------
     st.markdown("""
     <style>
-    [data-testid="stHeader"], div[role="banner"] { display: none !important; }
+    [data-testid="stHeader"], div[role="banner"] {
+        display: none !important;
+    }
     body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
-        padding-top: 0 !important; margin-top: 0 !important;
-    }
-    .stTextInput > div > div > input {
-        border: 2px solid #4CAF50; border-radius: 8px; padding: 8px; outline: none;
-    }
-    .stTextInput > div > div > input:focus {
-        border: 2px solid #2196F3; box-shadow: 0 0 5px rgba(33,150,243,0.5);
+        padding-top: 0 !important;
+        margin-top: 0 !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -72,9 +110,7 @@ def analiseDeSentimentos(email_hash=None):
         st.warning("Nenhum registro encontrado.")
         st.stop()
 
-    # ================================
     # Traduções de emoções
-    # ================================
     traducoes_emocoes = {
         "angry": "Raiva",
         "disgust": "Aborrecida",
@@ -85,91 +121,55 @@ def analiseDeSentimentos(email_hash=None):
         "neutral": "Neutra"
     }
 
-    # ================================
-    # Autenticação Google Cloud
-    # ================================
-    #client = storage.Client.from_service_account_json("chave_gcp.json")
-    client = storage.Client()
-    #st.dataframe(df)
-    
-    # ================================
-    # Quebra imagens em várias linhas
-    # ================================
+    # Quebra lista de imagens
     df["urls_imagens_split"] = df["urls_imagens"].str.split(";")
-    df_explodido = df.explode("urls_imagens_split")
-    df_explodido = df_explodido.rename(columns={"urls_imagens_split": "url_imagem"})
-    #st.dataframe("df explodido", df_explodido)
-    # ================================
-    # Processa imagens com DeepFace
-    # ================================
+    df_explodido = df.explode("urls_imagens_split").rename(columns={"urls_imagens_split": "url_imagem"})
+
+    # Processamento
     resultados_por_aluno = {}
+    bucket_name = "littera_images"
 
     for _, row in df_explodido.iterrows():
-        bucket_name = "littera_images"
         aluno = row["aluno_nome"]
         escola = row["escola_nome"]
         file_name = row["url_imagem"]
 
-        # Baixa imagem
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(file_name)
-        img_bytes = blob.download_as_bytes()
-
-        nparr = np.frombuffer(img_bytes, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
         try:
-            resultados = DeepFace.analyze(
-                img,
-                actions=['emotion'],
-                detector_backend="mtcnn",
-                enforce_detection=True
-            )
-
-            if isinstance(resultados, dict):
-                resultados = [resultados]
-
+            img_bytes = baixar_imagem_gcs(bucket_name, file_name)
+            resultados, img = analisar_emocao(img_bytes)
             emocao_dominante = resultados[0]['dominant_emotion']
             emocao_dominante_pt = traducoes_emocoes[emocao_dominante]
-
-            if (escola, aluno) not in resultados_por_aluno:
-                resultados_por_aluno[(escola, aluno)] = []
-
-            resultados_por_aluno[(escola, aluno)].append({
-                "arquivo": file_name,
-                "emocao": emocao_dominante_pt,
-                "detalhe": resultados,
-                "imagem": img
-            })
-
         except ValueError:
-            if (escola, aluno) not in resultados_por_aluno:
-                resultados_por_aluno[(escola, aluno)] = []
-            resultados_por_aluno[(escola, aluno)].append({
-                "arquivo": file_name,
-                "emocao": "Sem rosto detectado",
-                "detalhe": None,
-                "imagem": img
-            })
+            resultados, img = None, cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+            emocao_dominante_pt = "Sem rosto detectado"
+        except Exception as e:
+            logging.error(f"Erro ao processar imagem {file_name}: {e}")
+            continue
 
-    # ================================
-    # Expansores por aluno com resumo das 3 emoções
-    # ================================
+        if (escola, aluno) not in resultados_por_aluno:
+            resultados_por_aluno[(escola, aluno)] = []
+
+        resultados_por_aluno[(escola, aluno)].append({
+            "arquivo": file_name,
+            "emocao": emocao_dominante_pt,
+            "detalhe": resultados,
+            "imagem": img
+        })
+
+    # Exibição por aluno
     for (escola, aluno), fotos in resultados_por_aluno.items():
         resumo_emocoes = " | ".join([foto["emocao"] for foto in fotos])
         
         with st.expander(f"{escola} - {aluno} - {resumo_emocoes}"):
             for i, foto in enumerate(fotos, start=1):
-                
-
                 if foto["detalhe"] is None:
-                    st.error("Nenhum rosto detectado nesta foto.")
+                    st.error(f"📸 Foto {i}: Nenhum rosto detectado.")
                     continue
 
                 resultados = foto["detalhe"]
                 img_bgr_com_bbox = foto["imagem"].copy()
 
-                # desenha bounding box
+                # Desenha bounding box
                 for face in resultados:
                     region = face['region']
                     x, y, w, h = region['x'], region['y'], region['w'], region['h']
@@ -177,17 +177,39 @@ def analiseDeSentimentos(email_hash=None):
 
                 img_rgb = cv2.cvtColor(img_bgr_com_bbox, cv2.COLOR_BGR2RGB)
 
-                # gráfico emoções
+                # Prepara dados para gráfico
                 emocoes = resultados[0]['emotion']
-                x_vals = list(emocoes.values())
-                y_labels = [traducoes_emocoes[e] for e in emocoes.keys()]
+                valores = list(emocoes.values())
+                labels = [traducoes_emocoes[e] for e in emocoes.keys()]
+
+                # Define cores fixas por emoção (mantendo consistência visual)
+                cores = [
+                    "#E53935",  # Raiva
+                    "#8E24AA",  # Aborrecida
+                    "#3949AB",  # Medo
+                    "#43A047",  # Alegria
+                    "#FB8C00",  # Tristeza
+                    "#FDD835",  # Surpresa
+                    "#546E7A",  # Neutra
+                ]
 
                 fig, ax = plt.subplots(figsize=(6, 4))
-                cores = ["#DD0707", "#4C0BC5", '#F3EF04', "#03860E", '#D66214', "#F30454", '#99FF99']
-                bars = ax.barh(y_labels, x_vals, color=cores)
+                barras = ax.barh(labels, valores, color=cores)
                 ax.set_xlabel("Probabilidade (%)")
                 ax.set_title("Distribuição das Emoções (Face Principal)")
-                ax.bar_label(bars, fmt='%.1f%%', padding=3)
+                ax.invert_yaxis()  # Emoções mais fortes no topo
+
+                # Adiciona rótulos nas barras
+                for bar in barras:
+                    width = bar.get_width()
+                    ax.text(
+                        width + 1,
+                        bar.get_y() + bar.get_height() / 2,
+                        f"{width:.1f}%",
+                        va='center'
+                    )
+
+                fig.tight_layout()
 
                 col1, col2 = st.columns([1, 1])
                 with col1:
@@ -195,13 +217,5 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
-
-
-
-
-
-
-
-
 
 
