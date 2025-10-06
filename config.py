@@ -30,7 +30,10 @@ if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
 # -----------------------------
 # 🔹 URI do SQLAlchemy
 # -----------------------------
-DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+#DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Monta a URL no formato correto para Unix Socket
+DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@/{DB_NAME}?host={DB_HOST}"
 
 # -----------------------------
 # 🔹 Cria engine do SQLAlchemy
@@ -46,4 +49,5 @@ engine = create_engine(
 )
 
 print("✅ Engine criada com sucesso!")
+
 
