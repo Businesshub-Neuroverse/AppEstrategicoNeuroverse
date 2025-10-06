@@ -70,7 +70,7 @@ def dashboardPedagogico(email_hash=None):
     AND u.email_hash = :email_hash
     ORDER BY av.classification_score
     """)
-
+    st.write(engine)
     try:
         df = pd.read_sql(query, engine, params={"email_hash": email_hash})
     except OperationalError as e:
@@ -230,6 +230,7 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
 
 
