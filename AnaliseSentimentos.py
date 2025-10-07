@@ -41,7 +41,7 @@ def analisar_emocao(img_bytes: bytes):
         img,
         actions=['emotion'],
         detector_backend="OpenCV",   #"mtcnn",
-        enforce_detection=False
+        enforce_detection=True
     )
 
     if isinstance(resultados, dict):
@@ -218,6 +218,7 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
 
 
