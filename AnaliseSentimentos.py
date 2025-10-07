@@ -40,7 +40,7 @@ def analisar_emocao(img_bytes: bytes):
     resultados = DeepFace.analyze(
         img,
         actions=['emotion'],
-        detector_backend="Mediapipe",   #"mtcnn",
+        detector_backend="RetinaFace",   #"mtcnn",
         enforce_detection=True
     )
 
@@ -218,6 +218,7 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
 
 
