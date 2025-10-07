@@ -223,7 +223,7 @@ def dashboardPedagogico(email_hash=None):
 
     def colorir_linha_por_pg(row):
         #cor = cor_por_pontuacao(row["Pontuação Geral"])
-        cor = cor_por_pontuacao(row["avaliacao_erros"])
+        cor = cor_por_pontuacao(row["Erros Totais"])
         return [f'background-color: {cor}; color: black'] * len(row)
 
     df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
@@ -233,6 +233,7 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
 
 
