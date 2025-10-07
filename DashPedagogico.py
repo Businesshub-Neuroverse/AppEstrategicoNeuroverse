@@ -139,10 +139,17 @@ def dashboardPedagogico(email_hash=None):
     # Gráfico empilhado
     # ---------------------------
     df_stack = df_filtrado.groupby(["classificacao_aluno","escola_nome"], as_index=False).agg(qtd_alunosAvaliados=("aluno_nome","count"))
-    df_media = df_filtrado.groupby("escola_nome")["avaliacao_classif"].mean().reset_index()
-    df_media["cor_media"] = df_media["avaliacao_classif"].apply(cor_por_pontuacao)
-    df_media["escola_label"] = df_media["escola_nome"] + " (" + df_media["avaliacao_classif"].round(1).astype(str) + " pts)"
+    
+    #df_media = df_filtrado.groupby("escola_nome")["avaliacao_classif"].mean().reset_index()
+    #df_media["cor_media"] = df_media["avaliacao_classif"].apply(cor_por_pontuacao)
+    #df_media["escola_label"] = df_media["escola_nome"] + " (" + df_media["avaliacao_classif"].round(1).astype(str) + " pts)"
+    #df_stack = df_stack.merge(df_media[["escola_nome","escola_label","cor_media"]], on="escola_nome", how="left")
+
+    df_media = df_filtrado.groupby("escola_nome")["avaliacao_erros"].mean().reset_index()
+    df_media["cor_media"] = df_media["avaliacao_erros"].apply(cor_por_pontuacao)
+    df_media["escola_label"] = df_media["escola_nome"] + " (" + df_media["avaliacao_erros"].round(1).astype(str) + " média erros)"
     df_stack = df_stack.merge(df_media[["escola_nome","escola_label","cor_media"]], on="escola_nome", how="left")
+
     df_stack["texto_barra"] = df_stack["qtd_alunosAvaliados"].astype(str)
     df_stack["eixo_XQtd_Alunos"] = df_stack["qtd_alunosAvaliados"].astype(str)
 
