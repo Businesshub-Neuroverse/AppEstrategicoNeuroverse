@@ -121,11 +121,11 @@ def analiseDeSentimentos(email_hash=None):
     with col_nav1:
         if st.button("⬅ Anterior") and pagina > 0:
             st.session_state["pagina"] = pagina - 1
-            st.experimental_rerun()
+            st.rerun()
     with col_nav3:
         if st.button("Próximo ➡") and pagina < total_paginas - 1:
             st.session_state["pagina"] = pagina + 1
-            st.experimental_rerun()
+            st.rerun()
 
     # Seleciona apenas fotos da página atual
     start_idx = pagina * fotos_por_pagina
@@ -187,7 +187,7 @@ def analiseDeSentimentos(email_hash=None):
                         fig, ax = plt.subplots(figsize=(6,4))
                         barras = ax.barh(labels, valores, color=cores)
                         ax.set_xlabel("Probabilidade (%)")
-                        ax.set_title(f"Distribuição das Emoções - {file_name}")
+                        ax.set_title(f"Distribuição das Emoções")
                         ax.invert_yaxis()
                         for bar in barras:
                             width = bar.get_width()
@@ -211,3 +211,4 @@ def analiseDeSentimentos(email_hash=None):
         progress_bar.progress(idx / len(pagina_alunos), text=f"Processando {idx}/{len(pagina_alunos)} alunos...")
 
     progress_bar.empty()
+
