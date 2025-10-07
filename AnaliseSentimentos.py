@@ -29,7 +29,7 @@ def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
 
 @st.cache_data(show_spinner=False)
 def analisar_emocao(img_bytes: bytes):
-    st.write("novo")
+    
     """
     Analisa a emoção dominante usando DeepFace com backend MTCNN.
     Cacheada para evitar reprocessar as mesmas imagens.
@@ -41,7 +41,7 @@ def analisar_emocao(img_bytes: bytes):
         img,
         actions=['emotion'],
         detector_backend="mtcnn",
-        enforce_detection=True
+        enforce_detection=False
     )
 
     if isinstance(resultados, dict):
@@ -218,6 +218,7 @@ def analiseDeSentimentos(email_hash=None):
                 with col2:
                     st.success(f"📸 Foto {i} - Emoção Predominante: {foto['emocao']}")
                     st.pyplot(fig)
+
 
 
 
