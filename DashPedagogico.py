@@ -147,7 +147,7 @@ def dashboardPedagogico(email_hash=None):
 
     df_media = df_filtrado.groupby("escola_nome")["avaliacao_erros"].mean().reset_index()
     df_media["cor_media"] = df_media["avaliacao_erros"].apply(cor_por_pontuacao)
-    df_media["escola_label"] = df_media["escola_nome"] + " (" + df_media["avaliacao_erros"].round(1).astype(str) + " média erros)"
+    df_media["escola_label"] = df_media["escola_nome"] + " (" + df_media["avaliacao_erros"].round(1).astype(str) + " Me Erros)"
     df_stack = df_stack.merge(df_media[["escola_nome","escola_label","cor_media"]], on="escola_nome", how="left")
 
     df_stack["texto_barra"] = df_stack["qtd_alunosAvaliados"].astype(str)
@@ -172,7 +172,7 @@ def dashboardPedagogico(email_hash=None):
     fig_stack.update_layout(
         title=dict(text="Classificatório por Escola e Alunos", font=dict(size=20), x=0.5, xanchor='center'),
         hovermode="closest",
-        showlegend=False,
+        showlegend=True,
         paper_bgcolor='white',
         plot_bgcolor="white",
         autosize=True,
@@ -240,6 +240,7 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
 
 
