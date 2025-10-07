@@ -214,14 +214,16 @@ def dashboardPedagogico(email_hash=None):
 
     df_tabela = df_ilhas.groupby(["aluno_nome","classificacao_aluno"], as_index=False).mean(numeric_only=True)
     df_tabela[colunas_ilhas] = df_tabela[colunas_ilhas].round(1)
-    df_tabela["avaliacao_classif"] = df_tabela["avaliacao_classif"].round(1)
-    df_tabela = df_tabela.rename(columns={"avaliacao_classif":"Pontuação Geral"})
+    #df_tabela["avaliacao_classif"] = df_tabela["avaliacao_classif"].round(1)
+    #df_tabela = df_tabela.rename(columns={"avaliacao_classif":"Pontuação Geral"})
 
-    colunas_final = ["aluno_nome","Pontuação Geral","avaliacao_erros"] + colunas_ilhas
+    #colunas_final = ["aluno_nome","Pontuação Geral","avaliacao_erros"] + colunas_ilhas
+    colunas_final = ["aluno_nome","avaliacao_erros"] + colunas_ilhas
     df_tabela = df_tabela[colunas_final].rename(columns={"aluno_nome":"Aluno", **labels_ilhas})
 
     def colorir_linha_por_pg(row):
-        cor = cor_por_pontuacao(row["Pontuação Geral"])
+        #cor = cor_por_pontuacao(row["Pontuação Geral"])
+        cor = cor_por_pontuacao(row["avaliacao_erros"])
         return [f'background-color: {cor}; color: black'] * len(row)
 
     df_styled = df_tabela.style.apply(colorir_linha_por_pg, axis=1).format(precision=1).hide(axis="index")
@@ -231,6 +233,7 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
+
 
 
 
