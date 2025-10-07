@@ -56,7 +56,7 @@ def dashboardPedagogico(email_hash=None):
         av.calculum_score AS pts_ilha_calculo,
         av.grafomo_score AS pts_ilha_motora,
         av.meta_score AS pts_ilha_rima,
-        av.nominare_score AS pts_ilha_fala,
+        av.interpretation_score AS pts_ilha_interpretacao,
         av.opus_score AS pts_ilha_memoria,
         cl.label AS classificacao_aluno,
         cl.description AS classif_aluno_desc
@@ -203,13 +203,13 @@ def dashboardPedagogico(email_hash=None):
     colunas_ilhas = [
         "pts_ilha_leitura","pts_ilha_escrita","pts_ilha_visual",
         "pts_ilha_calculo","pts_ilha_motora","pts_ilha_rima",
-        "pts_ilha_fala","pts_ilha_memoria"
+        "pts_ilha_interpretacao","pts_ilha_memoria"
     ]
 
     labels_ilhas = {
         "pts_ilha_leitura":"Leitura","pts_ilha_escrita":"Escrita","pts_ilha_visual":"Visual",
         "pts_ilha_calculo":"Cálculo","pts_ilha_motora":"Motora","pts_ilha_rima":"Rima",
-        "pts_ilha_fala":"Fala","pts_ilha_memoria":"Memória","avaliacao_erros":"Erros Totais"
+        "pts_ilha_interpretacao":"Interpretação","pts_ilha_memoria":"Memória","avaliacao_erros":"Erros Totais"
     }
 
     df_tabela = df_ilhas.groupby(["aluno_nome","classificacao_aluno"], as_index=False).mean(numeric_only=True)
@@ -233,7 +233,6 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
     st.dataframe(df_styled)
-
 
 
 
