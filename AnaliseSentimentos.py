@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 # 🎯 Funções com cache (somente dados, não gráficos)
 # ================================
 
-@st.cache_data(show_spinner=False)
 def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
     """
     Faz download de uma imagem do GCS e retorna os bytes.
@@ -172,7 +171,7 @@ def analiseDeSentimentos(email_hash=None):
             "imagem": img
         })
 
-        progress_bar.progress(i / total, text=f"Processando {i}/{total} imagens...")
+        progress_bar.progress(i / total, text=f"Analisando {i}/{total} imagens...")
 
     progress_bar.empty()  # remove barra ao final
 
@@ -206,6 +205,7 @@ def analiseDeSentimentos(email_hash=None):
                     img_rgb = cv2.cvtColor(img_bgr_com_bbox, cv2.COLOR_BGR2RGB)
 
                     emocoes = resultados[0]['emotion']
+                    st.write("emocoes obtidas ", emocoes)
                     valores = list(emocoes.values())
                     labels = [traducoes_emocoes[e] for e in emocoes.keys()]
 
@@ -247,5 +247,6 @@ def analiseDeSentimentos(email_hash=None):
                 except Exception as e:
                     logging.error(f"Erro ao exibir imagem/gráfico da foto {j}: {e}")
                     st.error(f"Erro ao renderizar foto {j}.")
+
 
 
