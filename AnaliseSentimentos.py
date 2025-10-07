@@ -25,8 +25,6 @@ def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
     blob = bucket.blob(file_name)
     return blob.download_as_bytes()
 
-
-@st.cache_data(show_spinner=False)
 def analisar_emocao(img_bytes: bytes):
     """
     Analisa a emoção dominante usando DeepFace com backend MTCNN.
@@ -249,4 +247,5 @@ def analiseDeSentimentos(email_hash=None):
                 except Exception as e:
                     logging.error(f"Erro ao exibir imagem/gráfico da foto {j}: {e}")
                     st.error(f"Erro ao renderizar foto {j}.")
+
 
