@@ -150,13 +150,13 @@ def analiseDeSentimentos(email_hash=None):
     with col_nav1:
         if st.button("⬅ Anterior") and pagina > 0:
             st.session_state["pagina"] = pagina - 1
-            st.experimental_rerun()
+            st.rerun()
     with col_nav2:
         st.markdown(f"**Página {pagina+1} de {total_paginas}** | Total de alunos: {len(alunos_dict)}")
     with col_nav3:
         if st.button("Próximo ➡") and pagina < total_paginas - 1:
             st.session_state["pagina"] = pagina + 1
-            st.experimental_rerun()
+            st.rerun()
 
     # Seleciona apenas fotos da página atual
     start_idx = pagina * fotos_por_pagina
@@ -223,3 +223,4 @@ def analiseDeSentimentos(email_hash=None):
         progress_bar.progress(idx / len(pagina_alunos), text=f"Processando {idx}/{len(pagina_alunos)} alunos...")
 
     progress_bar.empty()
+
