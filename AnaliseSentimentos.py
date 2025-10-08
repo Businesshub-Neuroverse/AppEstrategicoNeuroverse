@@ -120,7 +120,7 @@ def analiseDeSentimentos(email_hash=None):
     pagina = st.session_state.get("pagina", 0)
 
     # Navegação
-    st.markdown(f"**Página {pagina+1} de {total_paginas} | Alunos nesta página: {len(flat_list[pagina*fotos_por_pagina:(pagina+1)*fotos_por_pagina])}**")
+    st.markdown(f"**Página {pagina+1} de {total_paginas} | Total de Fotos Analisadas Nesta Página: {len(flat_list[pagina*fotos_por_pagina:(pagina+1)*fotos_por_pagina])}**")
     col_nav1, col_nav2, col_nav3 = st.columns([1,2,1])
     with col_nav1:
         if st.button("⬅ Anterior") and pagina > 0:
@@ -201,3 +201,4 @@ def analiseDeSentimentos(email_hash=None):
                     st.error("Nenhum rosto detectado.")
 
                 progress_bar_aluno.progress(j/len(fotos), text=f"Fotos processadas: {j}/{len(fotos)}")
+
