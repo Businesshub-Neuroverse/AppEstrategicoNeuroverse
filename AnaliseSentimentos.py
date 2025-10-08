@@ -14,36 +14,40 @@ import math
 # ================================
 # Funções auxiliares
 # ================================
-
 def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
-    """Baixa a imagem do GCS"""
-    client = storage.Client()  # GOOGLE_APPLICATION_CREDENTIALS deve estar configurada
+    client = storage.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
     return blob.download_as_bytes()
 
 def analisar_emocao(img_bytes: bytes):
-    """Analisa emoção da imagem"""
     nparr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
     resultados = DeepFace.analyze(
         img,
         actions=['emotion'],
         detector_backend="mtcnn",
         enforce_detection=True
     )
-
     if isinstance(resultados, dict):
         resultados = [resultados]
-
     return resultados, img
 
 # ================================
 # Função principal
 # ================================
-
 def analiseDeSentimentos(email_hash=None):
+    # CSS
+    st.markdown("""
+    <style>
+    [data-testid="stHeader"], div[role="banner"] {display: none !important;}
+    body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.set_page_config(page_title="Face Neuro", page_icon="🧠", layout="wide")
     st.title("🧠 Análise de Sentimentos dos Alunos")
 
@@ -94,7 +98,6 @@ def analiseDeSentimentos(email_hash=None):
         "neutral": "Neutra"
     }
 
-    # Explode urls de imagens
     df["urls_imagens_split"] = df["urls_imagens"].str.split(";")
     df_explodido = df.explode("urls_imagens_split").rename(columns={"urls_imagens_split": "url_imagem"})
 
@@ -107,16 +110,17 @@ def analiseDeSentimentos(email_hash=None):
     bucket_name = "littera_images"
     fotos_por_pagina = 15
 
-    # Flatten alunos e imagens para paginação
+    # Flatten alunos e fotos
     flat_list = []
     for chave, fotos in alunos_dict.items():
         for foto in fotos:
-            flat_list.append((chave[0], chave[1], foto))  # (escola, aluno, url)
+            flat_list.append((chave[0], chave[1], foto))
 
     total_paginas = math.ceil(len(flat_list) / fotos_por_pagina)
     pagina = st.session_state.get("pagina", 0)
 
     # Navegação
+    st.markdown(f"**Página {pagina+1} de {total_paginas} | Alunos nesta página: {len(flat_list[pagina*fotos_por_pagina:(pagina+1)*fotos_por_pagina])}**")
     col_nav1, col_nav2, col_nav3 = st.columns([1,2,1])
     with col_nav1:
         if st.button("⬅ Anterior") and pagina > 0:
@@ -127,36 +131,28 @@ def analiseDeSentimentos(email_hash=None):
             st.session_state["pagina"] = pagina + 1
             st.rerun()
 
-    # Seleciona apenas fotos da página atual
+    # Fotos da página atual
     start_idx = pagina * fotos_por_pagina
     end_idx = start_idx + fotos_por_pagina
     pagina_atual = flat_list[start_idx:end_idx]
 
-    # Organiza fotos por aluno na página atual
+    # Organiza fotos por aluno
     pagina_alunos = {}
     for escola, aluno, foto in pagina_atual:
         pagina_alunos.setdefault((escola, aluno), []).append(foto)
 
-    # Barra de progresso
-    progress_bar = st.progress(0, text="Processando imagens...")
-
+    # ================================
+    # Lazy load + Dashboard visual
+    # ================================
     for idx, ((escola, aluno), fotos) in enumerate(pagina_alunos.items(), start=1):
         with st.expander(f"{escola} - {aluno}"):
-            for j, file_name in enumerate(fotos, start=1):
-                img_bytes = None
-                resultados = None
-                img = None
-                emocao_dominante_pt = "Erro"
+            st.markdown(f"**Fotos processadas: 0/{len(fotos)}**", unsafe_allow_html=True)
+            progress_bar_aluno = st.progress(0, text=f"Processando {aluno}...")
 
-                # Baixar imagem
+            for j, file_name in enumerate(fotos, start=1):
+                foto_label = f"Foto {j}"
                 try:
                     img_bytes = baixar_imagem_gcs(bucket_name, file_name)
-                except Exception as e:
-                    logging.error(f"Erro ao baixar {file_name}: {e}")
-                    continue
-
-                # Analisar emoção
-                try:
                     resultados, img = analisar_emocao(img_bytes)
                     emocao_dominante = resultados[0]['dominant_emotion']
                     emocao_dominante_pt = traducoes_emocoes[emocao_dominante]
@@ -165,50 +161,43 @@ def analiseDeSentimentos(email_hash=None):
                     emocao_dominante_pt = "Sem rosto detectado"
                     resultados = None
                 except Exception as e:
-                    logging.error(f"Erro ao analisar {file_name}: {e}")
+                    logging.error(f"Erro ao processar {file_name}: {e}")
                     continue
 
-                # Exibir imagem e gráfico
-                try:
-                    img_bgr_com_bbox = img.copy()
-                    if resultados is not None:
-                        for face in resultados:
-                            region = face.get('region', {})
-                            if all(k in region for k in ['x','y','w','h']):
-                                x, y, w, h = region['x'], region['y'], region['w'], region['h']
-                                cv2.rectangle(img_bgr_com_bbox, (x,y), (x+w, y+h), (0,255,0), 2)
+                # Desenha bounding box
+                img_bgr_com_bbox = img.copy()
+                if resultados is not None:
+                    for face in resultados:
+                        region = face.get('region', {})
+                        if all(k in region for k in ['x','y','w','h']):
+                            x, y, w, h = region['x'], region['y'], region['w'], region['h']
+                            cv2.rectangle(img_bgr_com_bbox, (x,y), (x+w,y+h), (0,255,0), 2)
 
-                        emocoes = resultados[0]['emotion']
-                        valores = list(emocoes.values())
-                        labels = [traducoes_emocoes[e] for e in emocoes.keys()]
+                    # Gráfico de emoções
+                    emocoes = resultados[0]['emotion']
+                    valores = list(emocoes.values())
+                    labels = [traducoes_emocoes[e] for e in emocoes.keys()]
+                    cores = ["#E53935","#8E24AA","#3949AB","#43A047","#FB8C00","#FDD835","#546E7A"]
 
-                        cores = ["#E53935","#8E24AA","#3949AB","#43A047","#FB8C00","#FDD835","#546E7A"]
+                    fig, ax = plt.subplots(figsize=(6,4))
+                    barras = ax.barh(labels, valores, color=cores)
+                    ax.set_xlabel("Probabilidade (%)")
+                    ax.set_title("Distribuição das Emoções")
+                    ax.invert_yaxis()
+                    for bar in barras:
+                        width = bar.get_width()
+                        ax.text(width+1, bar.get_y()+bar.get_height()/2, f"{width:.1f}%", va='center')
+                    fig.tight_layout()
 
-                        fig, ax = plt.subplots(figsize=(6,4))
-                        barras = ax.barh(labels, valores, color=cores)
-                        ax.set_xlabel("Probabilidade (%)")
-                        ax.set_title(f"Distribuição das Emoções")
-                        ax.invert_yaxis()
-                        for bar in barras:
-                            width = bar.get_width()
-                            ax.text(width+1, bar.get_y()+bar.get_height()/2, f"{width:.1f}%", va='center')
-                        fig.tight_layout()
+                    col1, col2 = st.columns([1,1])
+                    with col1:
+                        st.image(cv2.cvtColor(img_bgr_com_bbox, cv2.COLOR_BGR2RGB), caption=foto_label)
+                    with col2:
+                        st.success(f"📸 Emoção predominante: {emocao_dominante_pt}")
+                        st.pyplot(fig)
+                        plt.close(fig)
+                else:
+                    st.image(cv2.cvtColor(img_bgr_com_bbox, cv2.COLOR_BGR2RGB), caption=foto_label)
+                    st.error("Nenhum rosto detectado.")
 
-                        col1, col2 = st.columns([1,1])
-                        with col1:
-                            st.image(cv2.cvtColor(img_bgr_com_bbox, cv2.COLOR_BGR2RGB), caption=f"{file_name}")
-                        with col2:
-                            st.success(f"📸 Emoção predominante: {emocao_dominante_pt}")
-                            st.pyplot(fig)
-                            plt.close(fig)
-                    else:
-                        st.image(cv2.cvtColor(img_bgr_com_bbox, cv2.COLOR_BGR2RGB), caption=f"{file_name}")
-                        st.error("Nenhum rosto detectado.")
-                except Exception as e:
-                    logging.error(f"Erro ao exibir {file_name}: {e}")
-                    st.error(f"Erro ao renderizar {file_name}")
-
-        progress_bar.progress(idx / len(pagina_alunos), text=f"Processando {idx}/{len(pagina_alunos)} alunos...")
-
-    progress_bar.empty()
-
+                progress_bar_aluno.progress(j/len(fotos), text=f"Fotos processadas: {j}/{len(fotos)}")
