@@ -74,10 +74,6 @@ def gerar_grafico_emocoes(resultados, traducoes_emocoes):
 # ================================
 @st.cache_data(show_spinner=False)
 def carregar_e_analisar_todas(bucket_name, alunos_dict, traducoes_emocoes):
-    """
-    Baixa e analisa todas as imagens, retornando dict:
-    {(escola, aluno): [{"img": ..., "resultados": ..., "emocao_dominante": ...}, ...]}
-    """
     todas_analises = {}
     total_fotos = sum(len(fotos) for fotos in alunos_dict.values())
     progresso_global = 0
@@ -99,7 +95,6 @@ def carregar_e_analisar_todas(bucket_name, alunos_dict, traducoes_emocoes):
                     "emocao_dominante": emocao_dominante
                 })
             except ValueError:
-                # Sem rosto detectado
                 img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
                 todas_analises[(escola, aluno)].append({
                     "img_bytes": img_bytes,
@@ -119,46 +114,47 @@ def carregar_e_analisar_todas(bucket_name, alunos_dict, traducoes_emocoes):
     return todas_analises
 
 # ================================
-# Consulta SQL
+# Função principal que você chama
 # ================================
-query = text("""
-SELECT 
-    u.email_hash AS hash_email,
-    s.name AS escola_nome,
-    t.year AS turma_ano,
-    a.name AS aluno_nome,
-    av.status AS avaliacao_status,
-    av.feelings_urls AS urls_imagens,
-    cl.label AS classificacao_aluno
-FROM auth.users u
-JOIN auth.school_users su ON u.id = su.user_id
-JOIN core.schools s ON su.school_id = s.id
-JOIN core.school_classes t ON s.id = t.school_id
-JOIN core.children a ON t.id = a.class_id
-JOIN littera.children_avaliation av ON a.id = av.child_id
-JOIN littera.children_classification cl ON av.classification_id = cl.id
-WHERE av.status = 'Concluido' and av.feelings_urls is not null  
-AND u.email_hash = :email_hash
-ORDER BY av.classification_score
-""")
+def analiseDeSentimentos(email_hash):
+    # ================================
+    # Consulta SQL
+    # ================================
+    query = text("""
+    SELECT 
+        u.email_hash AS hash_email,
+        s.name AS escola_nome,
+        t.year AS turma_ano,
+        a.name AS aluno_nome,
+        av.status AS avaliacao_status,
+        av.feelings_urls AS urls_imagens,
+        cl.label AS classificacao_aluno
+    FROM auth.users u
+    JOIN auth.school_users su ON u.id = su.user_id
+    JOIN core.schools s ON su.school_id = s.id
+    JOIN core.school_classes t ON s.id = t.school_id
+    JOIN core.children a ON t.id = a.class_id
+    JOIN littera.children_avaliation av ON a.id = av.child_id
+    JOIN littera.children_classification cl ON av.classification_id = cl.id
+    WHERE av.status = 'Concluido' and av.feelings_urls is not null  
+    AND u.email_hash = :email_hash
+    ORDER BY av.classification_score
+    """)
 
-email_hash = st.text_input("Digite o email_hash do usuário")
-
-if email_hash:
     try:
         df = pd.read_sql(query, engine, params={"email_hash": email_hash})
     except OperationalError as e:
         logging.error(f"Falha operacional ao conectar banco: {e}")
         st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
-        st.stop()
+        return
     except Exception as e:
         logging.error(f"Erro inesperado: {e}")
         st.error("Ocorreu um erro inesperado. Tente novamente mais tarde.")
-        st.stop()
+        return
 
     if df.empty:
         st.warning("Nenhum registro encontrado.")
-        st.stop()
+        return
 
     traducoes_emocoes = {
         "angry": "Raiva",
@@ -182,14 +178,10 @@ if email_hash:
 
     bucket_name = "littera_images"
 
-    # ================================
-    # Carregar e analisar todas as imagens
-    # ================================
+    # Carrega e analisa todas as imagens
     todas_analises = carregar_e_analisar_todas(bucket_name, alunos_dict, traducoes_emocoes)
 
-    # ================================
     # Exibição dos resultados
-    # ================================
     progresso_placeholder = st.empty()
     total_alunos = len(todas_analises)
     for idx, ((escola, aluno), fotos_info) in enumerate(todas_analises.items(), start=1):
