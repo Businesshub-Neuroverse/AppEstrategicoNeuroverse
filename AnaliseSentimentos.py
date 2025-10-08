@@ -144,13 +144,13 @@ def analiseDeSentimentos(email_hash=None):
     with col_nav1:
         if st.button("⬅ Anterior") and pagina > 0:
             st.session_state["pagina"] = pagina - 1
-            st.experimental_rerun()
+            st.rerun()
     with col_nav2:
         st.markdown(f"**Página {pagina+1} de {total_paginas} | Alunos {pagina*fotos_por_pagina+1} a {min((pagina+1)*fotos_por_pagina, len(flat_list))} de {len(flat_list)}**", unsafe_allow_html=True)
     with col_nav3:
         if st.button("Próximo ➡") and pagina < total_paginas - 1:
             st.session_state["pagina"] = pagina + 1
-            st.experimental_rerun()
+            st.rerun()
 
     # ====================
     # Inicializa cache no session_state
@@ -246,3 +246,4 @@ def analiseDeSentimentos(email_hash=None):
         progress_bar.progress(idx / len(pagina_alunos), text=f"Processando {idx}/{len(pagina_alunos)} alunos...")
 
     progress_bar.empty()
+
