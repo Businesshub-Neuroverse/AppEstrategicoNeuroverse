@@ -13,7 +13,7 @@ tf-keras
 deepface
 google-cloud-storage
 matplotlib
-st_folium
+
 
 
 
