@@ -13,6 +13,9 @@ tf-keras
 deepface
 google-cloud-storage
 matplotlib
+folium
+streamlit-folium
+
 
 
 
