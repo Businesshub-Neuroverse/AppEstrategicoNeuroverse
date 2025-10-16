@@ -7,7 +7,6 @@ import logging
 import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
-import plotly.express as px
 
 def escolasNoMapa():
 
@@ -228,3 +227,4 @@ def escolasNoMapa():
     st_folium(m, use_container_width=True, returned_objects=[])
 
     #st.dataframe(df.reset_index(drop=True))
+
