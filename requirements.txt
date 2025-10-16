@@ -13,8 +13,8 @@ tf-keras
 deepface
 google-cloud-storage
 matplotlib
-MarkerCluster
 st_folium
+
 
 
 
