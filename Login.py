@@ -9,8 +9,8 @@ params = st.query_params                           # Obtém os parâmetros da UR
 email_hash = unquote(params.get("email_hash", "")) # Lê o parâmetro 'email_hash' e decodifica, se existir
 pagina = unquote(params.get("page", ""))           # Lê o parâmetro 'page' e decodifica, se existir
 
-#email_hash = "b9a809faf21409795d942a19cce14b3a4ae94a090d5779c17981a22274bccc0a"  #SE
-#pagina = "mapa_escolas"
+#email_hash = "ef0149b08b4e6f3cef78380e6c55cb1f7500448dd603cce01e5680d5681f9c04"
+#pagina = "dash_compfund"
 
 # Exibe os valores capturados na tela (para depuração)
 #st.write("Parâmetro email_hash:", email_hash)
@@ -26,6 +26,13 @@ if pagina == "dash_ped":                                # Se a página solicitad
     else:
         import DashPedagogico as dp     # Módulo (arquivo .py) que contém a função dashboardPedegogico
         dp.dashboardPedagogico(email_hash)    
+elif pagina == "dash_compfund":   
+    if not email_hash:                                  # ... mas não houver 'email_hash' informado...
+        st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
+        st.stop()                                       # E para a execução da aplicação
+    else:
+        import DashCompFundAluno as dcf    # Módulo (arquivo .py) que contém a função analiseDeSentimentos
+        dcf.dashboardCompFund(email_hash)    
 elif pagina == "analise_sentimento":   
     if not email_hash:                                  # ... mas não houver 'email_hash' informado...
         st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
