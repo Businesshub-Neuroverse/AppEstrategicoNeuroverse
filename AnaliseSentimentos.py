@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 # Funções auxiliares
 # ================================
 def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
-    client = storage.Client.from_service_account_json("chave_gcp.json")
-    #client = storage.Client()
+    #client = storage.Client.from_service_account_json("chave_gcp.json")
+    client = storage.Client()
     bucket = client.bucket(bucket_name)
     blob = bucket.blob(file_name)
     return blob.download_as_bytes()
@@ -208,3 +208,4 @@ def analiseDeSentimentos(email_hash=None):
                         plt.close(fig)
 
                     barra_aluno.empty()
+
