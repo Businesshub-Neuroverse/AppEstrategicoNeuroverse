@@ -26,7 +26,7 @@ def analisar_emocao(img_bytes: bytes):
     resultados = DeepFace.analyze(
         img,
         actions=['emotion'],
-        detector_backend="mtcnn",
+        detector_backend="opencv", # mtcnn, opencv
         enforce_detection=True
     )
     if isinstance(resultados, dict):
@@ -208,4 +208,5 @@ def analiseDeSentimentos(email_hash=None):
                         plt.close(fig)
 
                     barra_aluno.empty()
+
 
