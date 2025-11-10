@@ -21,26 +21,38 @@ def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
     return blob.download_as_bytes()
 
 def analisar_emocao(img_bytes: bytes):
+    """Analisa emoções detectando apenas o rosto principal (maior bounding box)."""
     nparr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
     resultados = DeepFace.analyze(
         img,
         actions=['emotion'],
-        detector_backend="mtcnn", # mtcnn, opencv
+        detector_backend="mtcnn",  # mtcnn, mediapipe, retinaface etc.
         enforce_detection=True
     )
+
+    # DeepFace pode retornar dict (1 rosto) ou list (vários)
     if isinstance(resultados, dict):
         resultados = [resultados]
+
+    # Escolhe o rosto principal (maior bounding box)
+    if len(resultados) > 1:
+        maior = max(
+            resultados,
+            key=lambda r: r['region']['w'] * r['region']['h'] if r.get('region') else 0
+        )
+        resultados = [maior]
+
     return resultados, img
+
 
 # ================================
 # Função principal
 # ================================
 def analiseDeSentimentos(email_hash=None):
+    st.set_page_config(page_title="Face Neuro", page_icon="🧠", layout="wide")
 
-    # ================================
-    # Configurações da página
-    # ================================
     st.markdown("""
     <style>
     [data-testid="stHeader"], div[role="banner"] { display: none !important; }
@@ -56,7 +68,6 @@ def analiseDeSentimentos(email_hash=None):
     </style>
     """, unsafe_allow_html=True)
 
-    st.set_page_config(page_title="Face Neuro", page_icon="🧠", layout="wide")
     st.title("🧠 Análise de Sentimentos dos Alunos")
 
     if email_hash is None:
@@ -73,7 +84,9 @@ def analiseDeSentimentos(email_hash=None):
         "neutral": "Neutra"
     }
 
+    # ================================
     # Consulta SQL
+    # ================================
     query = text("""
     SELECT 
         u.email_hash AS hash_email,
@@ -111,11 +124,12 @@ def analiseDeSentimentos(email_hash=None):
         st.warning("Nenhum registro encontrado.")
         return
 
-    # Explode URLs
+    # ================================
+    # Processamento e exibição
+    # ================================
     df["urls_imagens_split"] = df["urls_imagens"].str.split(";")
     df_explodido = df.explode("urls_imagens_split").rename(columns={"urls_imagens_split": "url_imagem"})
 
-    # Agrupa fotos por aluno
     alunos_dict = {}
     for _, row in df_explodido.iterrows():
         chave = (row["escola_nome"], row["aluno_nome"])
@@ -123,9 +137,6 @@ def analiseDeSentimentos(email_hash=None):
 
     bucket_name = "littera_images"
 
-    # ================================
-    # Exibição dos alunos
-    # ================================
     for (escola, aluno), fotos in alunos_dict.items():
         with st.expander(f"{escola} - {aluno}", expanded=False):
             with st.form(key=f"form_{aluno}"):
@@ -133,11 +144,10 @@ def analiseDeSentimentos(email_hash=None):
                 if submit_btn:
                     barra_aluno = st.progress(0, text=f"Processando {aluno}...")
 
-                    # Processar de 3 em 3 imagens
                     for i in range(0, len(fotos), 3):
                         subset = fotos[i:i+3]
                         fig, axes = plt.subplots(2, 3, figsize=(14, 8))
-                        fig.subplots_adjust(hspace=0.2)
+                        fig.subplots_adjust(hspace=0.25)
 
                         for j, foto in enumerate(subset):
                             idx = i + j + 1
@@ -145,29 +155,28 @@ def analiseDeSentimentos(email_hash=None):
                                 img_bytes = baixar_imagem_gcs(bucket_name, foto)
                                 resultados, img = analisar_emocao(img_bytes)
 
-                                # Recorte simples do bounding box
                                 region = resultados[0].get('region', {})
                                 if all(k in region for k in ['x','y','w','h']):
                                     x, y, w, h = region['x'], region['y'], region['w'], region['h']
                                     rosto = img[y:y+h, x:x+w]
 
                                     if rosto.size == 0:
-                                        st.warning(f"Foto: {idx}: Sem rosto detectado")
+                                        st.warning(f"Foto {idx}: Sem rosto detectado")
                                         continue
 
                                     imagem_red = cv2.resize(rosto, (200, 200))
                                     img_rgb = cv2.cvtColor(imagem_red, cv2.COLOR_BGR2RGB)
 
-                                    # Linha 1 → imagem e emoção predominante
+                                    # Plot imagem e emoção
                                     ax_img = axes[0, j]
                                     ax_img.imshow(img_rgb)
                                     ax_img.axis("off")
                                     ax_img.text(0.5, -0.1, f"Foto {idx}", fontsize=10, ha="center", va="top", transform=ax_img.transAxes)
 
                                     emocao_dominante = max(resultados[0]['emotion'], key=resultados[0]['emotion'].get)
-                                    ax_img.set_title(f"Emoção predominante: {traducoes_emocoes[emocao_dominante]}", fontsize=10, color="blue", pad=7)
+                                    ax_img.set_title(f"Emoção: {traducoes_emocoes[emocao_dominante]}", fontsize=10, color="blue", pad=7)
 
-                                    # Linha 2 → gráfico de barras verticais
+                                    # Gráfico de emoções
                                     ax_graph = axes[1, j]
                                     emocoes = resultados[0]['emotion']
                                     labels = [traducoes_emocoes[e] for e in emocoes.keys()]
@@ -177,8 +186,8 @@ def analiseDeSentimentos(email_hash=None):
                                     bars = ax_graph.bar(labels, valores, color=cores)
                                     ax_graph.set_ylim(0, 110)
                                     ax_graph.set_ylabel("%")
+                                    ax_graph.set_xticklabels(labels, rotation=45, ha="right")
 
-                                    # Adiciona os valores acima das barras
                                     for bar in bars:
                                         ax_graph.text(
                                             bar.get_x() + bar.get_width()/2, 
@@ -186,8 +195,6 @@ def analiseDeSentimentos(email_hash=None):
                                             f"{bar.get_height():.1f}%",
                                             ha='center', va='bottom', fontsize=9
                                         )
-
-                                    ax_graph.set_xticklabels(labels, rotation=45, ha="right")
 
                                 else:
                                     st.warning(f"Foto {idx}: Sem rosto detectado")
@@ -199,7 +206,6 @@ def analiseDeSentimentos(email_hash=None):
 
                             barra_aluno.progress(idx / len(fotos), text=f"Processando {idx}/{len(fotos)} fotos...")
 
-                        # Remove eixos vazios se não houver 3 imagens
                         for k in range(len(subset), 3):
                             axes[0, k].axis("off")
                             axes[1, k].axis("off")
@@ -208,6 +214,3 @@ def analiseDeSentimentos(email_hash=None):
                         plt.close(fig)
 
                     barra_aluno.empty()
-
-
-
