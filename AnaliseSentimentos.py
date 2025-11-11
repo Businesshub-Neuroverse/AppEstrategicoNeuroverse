@@ -29,7 +29,7 @@ def analisar_emocao(img_bytes: bytes):
         img,
         actions=['emotion'],
         detector_backend="mtcnn",  # mtcnn, mediapipe, retinaface etc.
-        enforce_detection=True
+        enforce_detection=False
     )
 
     # DeepFace pode retornar dict (1 rosto) ou list (vários)
@@ -214,3 +214,4 @@ def analiseDeSentimentos(email_hash=None):
                         plt.close(fig)
 
                     barra_aluno.empty()
+
