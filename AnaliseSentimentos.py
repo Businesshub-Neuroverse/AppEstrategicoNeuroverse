@@ -5,7 +5,7 @@ from google.cloud import storage
 from deepface import DeepFace
 import numpy as np
 from sqlalchemy import text
-from config import engine
+from config import executar_query
 from sqlalchemy.exc import OperationalError
 import logging
 import matplotlib.pyplot as plt
@@ -157,7 +157,7 @@ def analiseDeSentimentos(email_hash=None):
     }
 
     # Consulta SQL
-    query = text("""
+    query = """
     SELECT 
         u.email_hash AS hash_email,
         s.name AS escola_nome,
@@ -177,10 +177,10 @@ def analiseDeSentimentos(email_hash=None):
       AND av.feelings_urls IS NOT NULL  
       AND u.email_hash = :email_hash
     ORDER BY av.classification_score
-    """)
+    """
 
     try:
-        df = pd.read_sql(query, engine, params={"email_hash": email_hash})
+        df = executar_query(query, params={"email_hash": email_hash})
     except OperationalError as e:
         logging.error(f"Falha ao conectar banco: {e}")
         st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
@@ -280,3 +280,4 @@ def analiseDeSentimentos(email_hash=None):
                     plt.close(fig)
 
                 barra_aluno.empty()
+
