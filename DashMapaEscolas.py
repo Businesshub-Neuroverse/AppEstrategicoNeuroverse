@@ -225,8 +225,9 @@ def escolasNoMapa():
     # -------------------------------------
     # 📊 Layout final
     # -------------------------------------
-    st_folium(m, use_container_width=True, returned_objects=[])
+    st_folium(m, width='stretch', returned_objects=[])
 
     #st.dataframe(df.reset_index(drop=True))
+
 
 
