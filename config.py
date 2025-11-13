@@ -1,11 +1,21 @@
 # config.py
 import os
+import time
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 # -----------------------------
-# 🔹 Carrega .env local se existir
+# 🔹 Configuração de log padrão
+# -----------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+# -----------------------------
+# 🔹 Carrega .env local (se existir)
 # -----------------------------
 env_path = Path('.') / '.env'
 if env_path.exists():
@@ -13,43 +23,75 @@ if env_path.exists():
     print("🔹 .env carregado para ambiente local")
 
 # -----------------------------
-# 🔹 Busca variáveis de ambiente (local ou GCP)
+# 🔹 Busca variáveis de ambiente
 # -----------------------------
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT", "5432")  # default 5432
+DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME")
 
-# -----------------------------
-# 🔹 Validação mínima
-# -----------------------------
 if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
     raise ValueError("Alguma variável de conexão do banco não está definida!")
 
 # -----------------------------
-# 🔹 URI do SQLAlchemy
+# 🔹 Cria engine SQLAlchemy
 # -----------------------------
-#DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# Monta a URL no formato correto para Unix Socket
-DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@/{DB_NAME}?host={DB_HOST}"
-
-# -----------------------------
-# 🔹 Cria engine do SQLAlchemy
-# -----------------------------
-#engine = create_engine(DB_URI, echo=False, future=True)
+inicio_conexao = time.time()
 engine = create_engine(
-    DB_URI, #String de conexão para o banco de dados (ex: "postgresql+psycopg2://user:pass@host:port/dbname")
-    pool_size=5, #mantém 5 conexões "fixas" abertas.
-    max_overflow=10, #pode abrir até mais 10 extras, se necessário.
-    pool_timeout=30, #espera até 30s por uma conexão livre antes de lançar erro.
-    pool_recycle=300,  #recicla conexões a cada 5 min para evitar "stale connections" (desconexão inesperada pelo servidor).
-    pool_pre_ping=True #testa se a conexão ainda está viva antes de usar
+    DB_URI,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=300,
+    pool_pre_ping=True
 )
+logging.info(f"✅ Engine criada com sucesso em {time.time() - inicio_conexao:.3f}s")
 
-print("✅ Engine criada com sucesso!")
+# -----------------------------
+# 🕒 Decorador genérico para medir tempo
+# -----------------------------
+def medir_tempo(descricao="Execução"):
+    """
+    Decorador para medir o tempo de qualquer função.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            inicio = time.time()
+            logging.info(f"⏱️ {descricao} iniciada...")
+            resultado = func(*args, **kwargs)
+            duracao = time.time() - inicio
+            logging.info(f"✅ {descricao} concluída em {duracao:.3f}s")
+            return resultado
+        return wrapper
+    return decorator
 
+# -----------------------------
+# 🧠 Função auxiliar para medir tempo de conexão e query
+# -----------------------------
+@medir_tempo("Conexão e execução de query")
+def executar_query(query_text, params=None):
+    """
+    Executa uma query SQL e mede separadamente o tempo de conexão e de execução.
+    Retorna o DataFrame com os resultados.
+    """
+    import pandas as pd
+    from sqlalchemy import text
 
+    # Se o parâmetro vier como TextClause, converte para string
+    if not isinstance(query_text, str):
+        query_text = str(query_text)
 
+    inicio_conn = time.time()
+    with engine.connect() as conn:
+        tempo_conexao = time.time() - inicio_conn
+        logging.info(f"🔌 Tempo para abrir conexão: {tempo_conexao:.3f}s")
 
+        inicio_query = time.time()
+        df = pd.read_sql(text(query_text), conn, params=params)
+        tempo_query = time.time() - inicio_query
+        logging.info(f"📊 Tempo para executar query: {tempo_query:.3f}s")
+
+    return df
