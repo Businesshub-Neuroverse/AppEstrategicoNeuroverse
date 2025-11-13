@@ -299,7 +299,7 @@ def dashboardCompFund(email_hash=None):
             margin=dict(l=50, r=0, t=30, b=100)
         )
 
-        st.plotly_chart(fig_pizza, use_container_width=True)
+        st.plotly_chart(fig_pizza, width='stretch')
 
     # ---------------------------
     # Tabela por classificação
@@ -368,4 +368,5 @@ def dashboardCompFund(email_hash=None):
             st.markdown(html, unsafe_allow_html=True)
 
         render_table_html(df_tabela)
+
 
