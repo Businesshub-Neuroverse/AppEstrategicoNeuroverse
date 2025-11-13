@@ -37,7 +37,10 @@ if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
 # -----------------------------
 # 🔹 Cria engine SQLAlchemy
 # -----------------------------
-DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+#DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Monta a URL no formato correto para Unix Socket
+DB_URI = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@/{DB_NAME}?host={DB_HOST}"
 
 inicio_conexao = time.time()
 engine = create_engine(
@@ -95,3 +98,4 @@ def executar_query(query_text, params=None):
         logging.info(f"📊 Tempo para executar query: {tempo_query:.3f}s")
 
     return df
+
