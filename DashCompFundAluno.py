@@ -7,7 +7,7 @@ from streamlit_plotly_events import plotly_events
 import streamlit as st
 import numpy as np
 from sqlalchemy import text
-from config import engine
+from config import executar_query
 from sqlalchemy.exc import OperationalError
 import logging
 
@@ -46,7 +46,7 @@ def dashboardCompFund(email_hash=None):
     # ---------------------------
     # Consulta SQL
     # ---------------------------
-    query = text("""
+    query = """
     SELECT 
         s.name AS escola_nome,
         t.education_level AS turma_nivel,
@@ -68,10 +68,10 @@ def dashboardCompFund(email_hash=None):
     WHERE av.status = 'Concluido'
     AND u.email_hash = :email_hash
     ORDER BY t.grade
-    """)
+    """
 
     try:
-        df = pd.read_sql(query, engine, params={"email_hash": email_hash})
+         df = executar_query(query, params={"email_hash": email_hash})
     except OperationalError as e:
         logging.error(f"Falha operacional ao conectar banco: {e}")
         st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
@@ -368,3 +368,4 @@ def dashboardCompFund(email_hash=None):
             st.markdown(html, unsafe_allow_html=True)
 
         render_table_html(df_tabela)
+
