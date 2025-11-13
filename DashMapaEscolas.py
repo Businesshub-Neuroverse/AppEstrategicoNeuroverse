@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
-from config import engine
+from config import executar_query
 import logging
 import folium
 from folium.plugins import MarkerCluster
@@ -59,7 +59,7 @@ def escolasNoMapa():
     # -------------------------------------
     # 📦 Consulta ao banco de dados
     # -------------------------------------
-    query = text("""
+    query = """
     SELECT 
         s.id AS school_id,
         s.name AS school_name,
@@ -87,10 +87,11 @@ def escolasNoMapa():
         av.status
     ORDER BY 
         s.name, av.status;
-    """)
+    """
 
     try:
-        df_original = pd.read_sql(query, engine)
+        #df_original = pd.read_sql(query, engine)
+        df_original = executar_query(query)
     except OperationalError as e:
         logging.error(f"Erro ao conectar ao banco: {e}")
         st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
@@ -227,4 +228,5 @@ def escolasNoMapa():
     st_folium(m, use_container_width=True, returned_objects=[])
 
     #st.dataframe(df.reset_index(drop=True))
+
 
