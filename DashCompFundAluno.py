@@ -56,7 +56,7 @@ def dashboardCompFund(email_hash=None):
         t.year AS turma_ano,
         a.name AS aluno_nome,
         av.status AS avaliacao_status,
-        av.lectio_score AS pts_ilha_leitura,
+        av.interpretation_score AS pts_ilha_leitura,
         av.scriptura_score AS pts_ilha_escrita,
         av.calculum_score AS pts_ilha_calculo
     FROM auth.users u
@@ -368,5 +368,6 @@ def dashboardCompFund(email_hash=None):
             st.markdown(html, unsafe_allow_html=True)
 
         render_table_html(df_tabela)
+
 
 
