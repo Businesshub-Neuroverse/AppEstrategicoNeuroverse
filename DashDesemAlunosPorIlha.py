@@ -81,7 +81,7 @@ def dashboardDesAlunoIlha(email_hash=None):
     )
 
     st.markdown(
-        "<h2 style='color: #5A6ACF;'>📊 Desempenho dos Alunos e Turmas nas Ilhas do Conhecimento e Habilidades</h2>",
+        "<h2 style='color: #5A6ACF;'>📊 Desempenho dos Alunos e Turmas nas Ilhas de Conhecimento</h2>",
         unsafe_allow_html=True
     )
 
@@ -329,7 +329,7 @@ def dashboardDesAlunoIlha(email_hash=None):
 
             aluno = st.selectbox("Selecione o aluno:", df["aluno_nome"].unique())
 
-            st.caption("🔹 No gráfico de pizza, cada fatia refere-se a ilha com pelo menos 'Um Erro' cometido pelo aluno acima selecionado.")
+            st.caption("🔹 No gráfico de pizza, cada fatia refere-se a ilha com pelo menos 'Um Erro'.")
 
             df_aluno = df[df["aluno_nome"] == aluno].iloc[0]
             valores = [df_aluno[i] for i in ILHAS]
@@ -444,5 +444,6 @@ def dashboardDesAlunoIlha(email_hash=None):
             height=500,
             margin=dict(l=50, r=50, t=10, b=20)
         )
+
 
         st.plotly_chart(fig_bar, width='stretch')
