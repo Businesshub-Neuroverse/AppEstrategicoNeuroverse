@@ -24,14 +24,21 @@ if pagina == "dash_ped":                                # Se a página solicitad
         st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
         st.stop()                                       # E para a execução da aplicação
     else:
-        import DashPedagogico as dp     # Módulo (arquivo .py) que contém a função dashboardPedegogico
+        import DashPedagogico as dp     # Módulo (arquivo .py) que contém a função dashboardPedagogico
         dp.dashboardPedagogico(email_hash)    
+elif pagina == "dash_desaluno_ilha":   
+    if not email_hash:                                  # ... mas não houver 'email_hash' informado...
+        st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
+        st.stop()                                       # E para a execução da aplicação
+    else:
+        import DashDesemAlunosPorIlha as dai    # Módulo (arquivo .py) que contém a função dashboardDesAlunoIlha
+        dai.dashboardDesAlunoIlha(email_hash)    
 elif pagina == "dash_compfund":   
     if not email_hash:                                  # ... mas não houver 'email_hash' informado...
         st.error("Parâmetro 'email_hash' não fornecido na URL!")  # ... mostra mensagem de erro
         st.stop()                                       # E para a execução da aplicação
     else:
-        import DashCompFundAluno as dcf    # Módulo (arquivo .py) que contém a função analiseDeSentimentos
+        import DashCompFundAluno as dcf    # Módulo (arquivo .py) que contém a função dashboardCompFund
         dcf.dashboardCompFund(email_hash)    
 elif pagina == "analise_sentimento":   
     if not email_hash:                                  # ... mas não houver 'email_hash' informado...
@@ -41,19 +48,8 @@ elif pagina == "analise_sentimento":
         import AnaliseSentimentos as ans    # Módulo (arquivo .py) que contém a função analiseDeSentimentos
         ans.analiseDeSentimentos(email_hash)    
 elif pagina == "mapa_escolas":   
-        import DashMapaEscolas as mpe    # Módulo (arquivo .py) que contém a função analiseDeSentimentos
+        import DashMapaEscolas as mpe    # Módulo (arquivo .py) que contém a função escolasNoMapa
         mpe.escolasNoMapa()    
 else:
-    # Caso 'page' não seja 'dash_ped' ou não exista, mostra mensagem de erro
     st.error("Parâmetro 'page' não fornecido ou página não encontrada!")
     st.stop()  # Para a execução da aplicação
-
-
-
-
-
-
-
-
-
-
