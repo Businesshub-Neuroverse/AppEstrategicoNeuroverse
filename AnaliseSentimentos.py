@@ -1,285 +1,423 @@
 import streamlit as st
 import pandas as pd
-import cv2
-from google.cloud import storage
-from deepface import DeepFace
 import numpy as np
-from sqlalchemy import text
+import json
+import matplotlib.pyplot as plt
 from config import executar_query
 from sqlalchemy.exc import OperationalError
 import logging
-import matplotlib.pyplot as plt
 
-with st.spinner("Carregando informações..."):
-    # ------------------------
-    # Função para detectar o maior rosto (usa MTCNN e fallback)
-    # ------------------------
-    def detectar_maior_rosto_com_fallback(img, detector_backend="mtcnn"):
-        """
-        Recebe imagem BGR (numpy.ndarray).
-        Primeiro tenta MTCNN (recomendado). Se falhar, tenta DeepFace.extract_faces como fallback.
-        Retorna dicionário com 'facial_area': {'x','y','w','h'} ou None.
-        """
-        # 1) Tentar MTCNN
+# ===========================
+# Função Principal ajustada
+# ===========================
+def analiseDeSentimentos(email_hash=None):
+
+    # -------------------------
+    # CSS e configuração da página
+    # -------------------------
+    st.markdown("""
+    <style>
+    [data-testid="stHeader"], div[role="banner"] { display: none !important; }
+    body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
+        padding-top: 0 !important; margin-top: 0 !important;
+    }
+    .card { padding: 2px; border-radius: 14px; background-color: #F6F7FF; text-align: center;
+           border-left: 6px solid #5A6ACF; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card h3 { margin: 0; line-height: 1; font-size: 22px; color: #5A6ACF; }
+    .card p { margin: 0; line-height: 1; font-size: 22px; font-weight: bold; color: #333; }
+    .card-mini { padding: 8px 14px; font-size: 17px; background: #F6F7FF; border-left: 6px solid #5A6ACF;
+                 border-radius: 12px; text-align: center; margin-bottom: 10px; font-weight: 600;
+                 box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    
+    /* -----------------------------
+    MULTISELECT / SELECT – ESTILO BASE
+    ----------------------------- */
+
+    /* Caixa geral */
+    div[data-baseweb="select"] {
+        border-radius: 12px !important;
+        border: 1px solid #d5d5d5 !important;
+        padding: 4px !important;
+        background-color: #ffffff !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Foco */
+    div[data-baseweb="select"]:focus-within {
+        border-color: #5A6ACF !important;
+        box-shadow: 0 0 0 2px rgba(90, 106, 207, 0.25) !important;
+    }
+
+    /* Texto */
+    div[data-baseweb="select"] div {
+        font-size: 15px !important;
+        color: #333 !important;
+    }
+
+    /* Hover no item da lista */
+    ul[role="listbox"] > li:hover {
+        background-color: #eef0ff !important;
+        color: #5A6ACF !important;
+        cursor: pointer !important;
+    }
+
+
+    /* -----------------------------
+    FIX DEFINITIVO DO FUNDO PRETO
+    (Chips + item selecionado)
+    ----------------------------- */
+
+    /* Chip do multiselect */
+    div[data-baseweb="tag"][class] {
+        background: #EEF0FF !important;
+        background-color: #EEF0FF !important;
+        color: #5A6ACF !important;
+        border-radius: 10px !important;
+        padding: 2px 8px !important;
+    }
+
+    /* Texto do chip */
+    div[data-baseweb="tag"][class] span {
+        color: #5A6ACF !important;
+        font-weight: 600 !important;
+    }
+
+    /* Ícone X do chip */
+    div[data-baseweb="tag"][class] svg {
+        fill: #5A6ACF !important;
+    }
+
+    /* Item selecionado na lista */
+    ul[role="listbox"] > li[aria-selected="true"] {
+        background: #5A6ACF !important;
+        color: white !important;
+    }
+                
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.set_page_config(page_title="Face Neuro", page_icon="🧠", layout="wide")
+    st.markdown("<h2 style='color: #5A6ACF;'>🧠 Análise de Sentimentos dos Alunos nas Ilhas do Conhecimento</h2>", unsafe_allow_html=True)
+
+    if email_hash is None:
+        st.warning("Email hash não fornecido.")
+        return
+
+    # -------------------------
+    # Dicionários de tradução e cores
+    # -------------------------
+    traducoes_emocoes = {
+        "angry": "Raiva",
+        "disgust": "Aborrecida",
+        "fear": "Medo",
+        "happy": "Alegria",
+        "sad": "Tristeza",
+        "surprise": "Surpresa",
+        "neutral": "Neutra"
+    }
+
+    cores_emocoes = {
+        "Raiva": "#E74C3C",
+        "Aborrecida": "#8E44AD",
+        "Medo": "#2C3E50",
+        "Alegria": "#F1C40F",
+        "Tristeza": "#3498DB",
+        "Surpresa": "#1ABC9C",
+        "Neutra": "#95A5A6"
+    }
+
+    # Ordem consistente de emoções (inglês keys)
+    ordem_emocoes_eng = ["happy", "sad", "neutral", "angry", "disgust", "fear", "surprise"]
+
+    # -------------------------
+    # Buscar dados SQL
+    # -------------------------
+    query = """
+    SELECT 
+        s.name AS escola_nome,
+        t.education_level AS turma_nivel,
+        t.shift AS turma_turno,
+        t.grade AS turma_serie,
+        t.name AS turma_nome,
+        t.year AS turma_ano,
+        a.name AS aluno_nome,
+        av.status AS avaliacao_status,
+        av.feelings_results AS emocoes_imagens
+    FROM auth.users u
+    JOIN auth.school_users su ON u.id = su.user_id
+    JOIN core.schools s ON su.school_id = s.id
+    JOIN core.school_classes t ON s.id = t.school_id
+    JOIN core.children a ON t.id = a.class_id
+    JOIN littera.children_avaliation av ON a.id = av.child_id
+    WHERE av.status = 'Concluido' AND av.feelings_results IS NOT NULL
+    AND u.email_hash = :email_hash
+    ORDER BY t.grade;
+    """
+    try:
+        df = executar_query(query, {"email_hash": email_hash})
+    except Exception as e:
+        logging.exception("Erro ao executar query:")
+        st.error("Erro ao buscar dados.")
+        return
+
+    if df.empty:
+        st.warning("Nenhum registro encontrado.")
+        return
+
+    # -------------------------
+    # Criar identificador único da turma
+    # -------------------------
+    df["turma_id"] = (
+        df["turma_ano"].astype(str) + ": " +
+        df["turma_serie"].astype(str) + "ª série " +
+        df["turma_nome"].astype(str) + " – " +
+        df["turma_turno"].astype(str)
+    )
+
+    # -------------------------
+    # SELECTBOX centralizado para turma e aluno
+    # -------------------------
+    turmas = sorted(df["turma_id"].unique())
+    colA, colB = st.columns(2)
+
+    #c1, c2, c3 = st.columns([1, 2, 1])
+    with colA:
+
+        st.markdown("<h3 style='margin-top:18px;'>⬇️ Seleciona a Turma e Aluno abaixo</h3>", unsafe_allow_html=True)
+
+        turma_selecionada = st.selectbox("Selecione uma turma:", turmas)
+
+    df_turma = df[df["turma_id"] == turma_selecionada]
+    if df_turma.empty:
+        st.warning("Nenhum dado para a turma selecionada.")
+        return
+
+    alunos = sorted(df_turma["aluno_nome"].unique())
+    with colA:
+        aluno_escolhido = st.selectbox("Escolha um aluno:", alunos)
+
+    df_aluno = df_turma[df_turma["aluno_nome"] == aluno_escolhido]
+    if df_aluno.empty:
+        st.warning("Nenhum dado para o aluno selecionado.")
+        return
+
+    # -------------------------
+    # Preparar todas as fotos da turma (para média)
+    # -------------------------
+    fotos_da_turma = []   # lista de dicts {'emotions': {...}, 'primary_emotion': ...}
+
+    for idx, item in enumerate(df_turma["emocoes_imagens"]):
+        if item is None:
+            continue
+        # item pode ser list (já desserializado) ou string JSON
         try:
-            from mtcnn import MTCNN
-            detector = MTCNN()
-            # MTCNN espera RGB
-            rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            dets = detector.detect_faces(rgb)
-            faces = []
-            for d in dets:
-                box = d.get("box", None)
-                conf = d.get("confidence", 0)
-                if box is None:
+            if isinstance(item, list):
+                fotos_list = item
+            elif isinstance(item, str):
+                fotos_list = json.loads(item)
+            else:
+                # formato inesperado: pula
+                continue
+        except Exception:
+            continue
+
+        # fotos_list deve ser uma lista de objetos
+        if not isinstance(fotos_list, list):
+            continue
+
+        for foto in fotos_list:
+            # validações
+            if not isinstance(foto, dict):
+                continue
+            if "emotions" not in foto or foto["emotions"] is None:
+                continue
+            # garante estrutura correta: emotions é dict
+            if not isinstance(foto["emotions"], dict):
+                continue
+            fotos_da_turma.append(foto)
+
+    # -------------------------
+    # Calcular média por emoção (turma) — usa apenas fotos válidas
+    # -------------------------
+    media_turma = None
+    if len(fotos_da_turma) > 0:
+        soma = {k: 0.0 for k in ordem_emocoes_eng}
+        count = 0
+        for foto in fotos_da_turma:
+            emotions = foto["emotions"]
+            # some apenas as keys que existem
+            for eng in ordem_emocoes_eng:
+                val = emotions.get(eng)
+                if val is None:
+                    # se não existir, soma 0
                     continue
-                x, y, w, h = box
-                # normalizar valores negativos e inteiros
-                x = int(max(0, x))
-                y = int(max(0, y))
-                w = int(max(0, w))
-                h = int(max(0, h))
-                faces.append({"facial_area": {"x": x, "y": y, "w": w, "h": h}, "confidence": conf})
-            if faces:
-                maior = max(faces, key=lambda r: r["facial_area"]["w"] * r["facial_area"]["h"])
-                return maior
-        except Exception:
-            # falha no MTCNN (ex.: não instalado) → segue para fallback
-            pass
-    
-        # 2) Fallback: DeepFace.extract_faces
-        try:
-            detections = DeepFace.extract_faces(img_path=img, detector_backend=detector_backend, enforce_detection=False)
-            if detections:
-                # extract_faces retorna lista de dict com 'facial_area' chave
-                maior = max(detections, key=lambda r: r["facial_area"]["w"] * r["facial_area"]["h"] if r.get("facial_area") else 0)
-                return maior
-        except Exception:
-            pass
-    
-        return None
-    
-    
-    # ================================
-    # Baixar imagem do GCS
-    # ================================
-    def baixar_imagem_gcs(bucket_name: str, file_name: str) -> bytes:
-        #client = storage.Client.from_service_account_json("chave_gcp.json")
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(file_name)
-        return blob.download_as_bytes()
-    
-    
-    # ================================
-    # Analisa apenas o rosto principal
-    # ================================
-    def analisar_emocao(img_bytes: bytes, detector_backend="mtcnn"):
-        """
-        Detecta o maior rosto e analisa somente esse recorte.
-        Retorna: resultado_lista, imagem_original (BGR), bbox (x,y,w,h)
-        """
-        nparr = np.frombuffer(img_bytes, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-        # detectar maior rosto
-        maior = detectar_maior_rosto_com_fallback(img, detector_backend=detector_backend)
-        if maior is None:
-            raise ValueError("Nenhum rosto detectado")
-    
-        fa = maior.get("facial_area")
-        if not fa or not all(k in fa for k in ("x", "y", "w", "h")):
-            raise ValueError("Bounding box inválido")
-    
-        # garantir inteiros e limites dentro da imagem
-        h_img, w_img = img.shape[:2]
-        x = int(max(0, fa["x"]))
-        y = int(max(0, fa["y"]))
-        w = int(max(0, fa["w"]))
-        h = int(max(0, fa["h"]))
-    
-        # ajustar se exceder limites
-        x2 = min(w_img, x + w)
-        y2 = min(h_img, y + h)
-        w = x2 - x
-        h = y2 - y
-        if w <= 0 or h <= 0:
-            raise ValueError("Rosto fora dos limites da imagem")
-    
-        rosto = img[y:y+h, x:x+w]
-    
-        if rosto.size == 0:
-            raise ValueError("Rosto recortado vazio")
-    
-        # Analisa apenas o recorte (usa enforce_detection=False para evitar crash)
-        resultado = DeepFace.analyze(
-            rosto,
-            actions=["emotion"],
-            detector_backend=detector_backend,
-            enforce_detection=False
-        )
-    
-        # padroniza saída para lista
-        if isinstance(resultado, dict):
-            resultado = [resultado]
-    
-        return resultado, img, (x, y, w, h)
-    
-    
-    # ================================
-    # Função principal Streamlit
-    # ================================
-    def analiseDeSentimentos(email_hash=None):
-        st.set_page_config(page_title="Face Neuro", page_icon="🧠", layout="wide")
-    
-        st.markdown("""
-        <style>
-        [data-testid="stHeader"], div[role="banner"] { display: none !important; }
-        body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
-            padding-top: 0 !important; margin-top: 0 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-    
-        st.title("🧠 Análise de Sentimentos dos Alunos")
-    
-        if email_hash is None:
-            st.warning("Email hash não fornecido.")
-            return
-    
-        traducoes_emocoes = {
-            "angry": "Raiva",
-            "disgust": "Aborrecida",
-            "fear": "Medo",
-            "happy": "Alegria",
-            "sad": "Tristeza",
-            "surprise": "Surpresa",
-            "neutral": "Neutra"
-        }
-    
-        # Consulta SQL
-        query = """
-        SELECT 
-            u.email_hash AS hash_email,
-            s.name AS escola_nome,
-            t.year AS turma_ano,
-            a.name AS aluno_nome,
-            av.status AS avaliacao_status,
-            av.feelings_urls AS urls_imagens,
-            cl.label AS classificacao_aluno
-        FROM auth.users u
-        JOIN auth.school_users su ON u.id = su.user_id
-        JOIN core.schools s ON su.school_id = s.id
-        JOIN core.school_classes t ON s.id = t.school_id
-        JOIN core.children a ON t.id = a.class_id
-        JOIN littera.children_avaliation av ON a.id = av.child_id
-        JOIN littera.children_classification cl ON av.classification_id = cl.id
-        WHERE av.status = 'Concluido' 
-          AND av.feelings_urls IS NOT NULL  
-          AND u.email_hash = :email_hash
-        ORDER BY av.classification_score
-        """
-    
-        try:
-            df = executar_query(query, params={"email_hash": email_hash})
-        except OperationalError as e:
-            logging.error(f"Falha ao conectar banco: {e}")
-            st.error("Erro temporário ao conectar. Tente novamente mais tarde.")
-            return
-        except Exception as e:
-            logging.error(f"Erro inesperado: {e}")
-            st.error("Ocorreu um erro inesperado.")
-            return
-    
-        if df.empty:
-            st.warning("Nenhum registro encontrado.")
-            return
-    
-        # Explode URLs e agrupa por aluno
-        df["urls_imagens_split"] = df["urls_imagens"].str.split(";")
-        df_explodido = df.explode("urls_imagens_split").rename(columns={"urls_imagens_split": "url_imagem"})
-    
-        alunos_dict = {}
-        for _, row in df_explodido.iterrows():
-            chave = (row["escola_nome"], row["aluno_nome"])
-            alunos_dict.setdefault(chave, []).append(row["url_imagem"])
-    
-        bucket_name = "littera_images"
-    
-        # Loop por aluno
-        for (escola, aluno), fotos in alunos_dict.items():
-            with st.expander(f"{escola} - {aluno}", expanded=False):
-                with st.form(key=f"form_{aluno}"):
-                    submit_btn = st.form_submit_button(f"Analisar {aluno}")
-                    if not submit_btn:
-                        continue
-    
-                    barra_aluno = st.progress(0, text=f"Processando {aluno}...")
-    
-                    # processa em blocos de 3
-                    for i in range(0, len(fotos), 3):
-                        subset = fotos[i:i+3]
-                        # garantir axes sempre 2D (squeeze=False)
-                        fig, axes = plt.subplots(2, 3, figsize=(14, 8), squeeze=False)
-                        fig.subplots_adjust(hspace=0.18, wspace=0.25)
-    
-                        for j, foto in enumerate(subset):
-                            idx = i + j + 1
-                            try:
-                                img_bytes = baixar_imagem_gcs(bucket_name, foto)
-                                resultados, img, (x, y, w, h) = analisar_emocao(img_bytes, detector_backend="mtcnn")
-    
-                                # mostra apenas o rosto usado na análise (garante mesma imagem)
-                                rosto = img[y:y+h, x:x+w]
-                                if rosto.size == 0:
-                                    st.warning(f"Foto {idx}: Sem rosto detectado")
-                                    continue
-    
-                                imagem_red = cv2.resize(rosto, (200, 200))
-                                img_rgb = cv2.cvtColor(imagem_red, cv2.COLOR_BGR2RGB)
-    
-                                # Plot imagem
-                                ax_img = axes[0, j]
-                                ax_img.imshow(img_rgb)
-                                ax_img.axis("off")
-                                ax_img.text(0.5, -0.12, f"Foto {idx}", fontsize=10, ha="center", va="top", transform=ax_img.transAxes)
-    
-                                emocao_dominante = max(resultados[0]["emotion"], key=resultados[0]["emotion"].get)
-                                ax_img.set_title(f"Emoção: {traducoes_emocoes.get(emocao_dominante, emocao_dominante)}",
-                                                 fontsize=10, color="blue", pad=5)
-    
-                                # gráfico de barras vertical
-                                ax_graph = axes[1, j]
-                                emocoes = resultados[0]["emotion"]
-                                labels = [traducoes_emocoes.get(k, k) for k in emocoes.keys()]
-                                valores = list(emocoes.values())
-                                cores = ["#E53935","#8E24AA","#3949AB","#43A047","#FB8C00","#FDD835","#546E7A"]
-    
-                                bars = ax_graph.bar(labels, valores, color=cores)
-                                ax_graph.set_ylim(0, 110)
-                                ax_graph.set_ylabel("%")
-                                ax_graph.set_xticklabels(labels, rotation=45, ha="right")
-    
-                                for bar in bars:
-                                    ax_graph.text(bar.get_x() + bar.get_width()/2,
-                                                  bar.get_height() + 1,
-                                                  f"{bar.get_height():.1f}%", ha="center", va="bottom", fontsize=9)
-    
-                            except ValueError:
-                                st.warning(f"Foto {idx}: Sem rosto detectado")
-                            except Exception as e:
-                                st.warning(f"Foto {idx}: Erro ao processar ({e})")
-    
-                            barra_aluno.progress(idx / len(fotos), text=f"Processando {idx}/{len(fotos)} fotos...")
-    
-                        # desliga eixos vazios
-                        for k in range(len(subset), 3):
-                            axes[0, k].axis("off")
-                            axes[1, k].axis("off")
-    
-                        st.pyplot(fig)
-                        plt.close(fig)
-    
-                    barra_aluno.empty()
-    
-    
+                # assumindo que os valores do DB já são percentuais (ex: 27.93)
+                soma[eng] += float(val)
+            count += 1
+        # média por foto
+        media_turma = {eng: (soma[eng] / count) for eng in ordem_emocoes_eng}
+    else:
+        media_turma = {eng: 0.0 for eng in ordem_emocoes_eng}
+
+    with colB:
+    # -------------------------
+    # Mostrar gráfico da média da turma
+    # -------------------------
+        st.markdown("<h3 style='margin-top:18px;'>📈 Média dos Sentimentos da Turma</h3>", unsafe_allow_html=True)
+
+        keys_pt = [traducoes_emocoes[eng] for eng in ordem_emocoes_eng]
+        vals_media = [media_turma[eng] for eng in ordem_emocoes_eng]
+        cores_media = [cores_emocoes[k] for k in keys_pt]
+
+        fig_media, ax_media = plt.subplots(figsize=(9, 4))
+        bars = ax_media.bar(keys_pt, vals_media, color=cores_media)
+        ax_media.set_ylim(0, max(vals_media) * 1.25 if max(vals_media) > 0 else 1)
+        ax_media.tick_params(axis='x', rotation=35)
+        ax_media.set_ylabel("Percentual")
+
+        for bar, v in zip(bars, vals_media):
+            ax_media.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, f"{v:.1f}%", ha='center', fontsize=10, fontweight='bold')
+
+        st.pyplot(fig_media)
+
+    # -------------------------
+    # Dados do aluno selecionado: extrair lista de fotos (validações)
+    # -------------------------
+    raw = df_aluno["emocoes_imagens"].iloc[0]
+    if raw is None:
+        st.warning("Nenhum dado de emoções para o aluno.")
+        return
+
+    try:
+        photos = raw if isinstance(raw, list) else json.loads(raw)
+    except Exception:
+        st.warning("Formato de emoções inválido.")
+        return
+
+    # filtrar fotos válidas
+    fotos_validas = []
+    for foto in photos:
+        if not isinstance(foto, dict):
+            continue
+        em = foto.get("emotions")
+        if not em or not isinstance(em, dict):
+            continue
+        fotos_validas.append(foto)
+
+    if len(fotos_validas) == 0:
+        st.warning("Nenhuma foto com emoções válidas para o aluno.")
+        return
+
+    # -------------------------
+    # Título aluno + turma
+    # -------------------------
+    st.markdown(
+        f"""
+        <h3>📊 Emoções identificadas em:
+            <span style='color:#5A6ACF; font-size:22px;'>
+                {aluno_escolhido} | {turma_selecionada}
+            </span>
+        </h3>
+        """,
+        unsafe_allow_html=True
+    )
+
+   # -------------------------
+    # Exibição dos gráficos das fotos do aluno
+    # Sempre 3 colunas — mesmo com menos fotos
+    # -------------------------
+
+    # garantir lista exata de 3 itens
+    fotos_para_exibir = []
+
+    for idx in range(3):
+        if idx < len(fotos_validas):
+            fotos_para_exibir.append(fotos_validas[idx])
+        else:
+            fotos_para_exibir.append(None)  # posição vazia → exibirá aviso
+
+    cols_fotos = st.columns(3)
+
+    for i in range(3):
+        with cols_fotos[i]:
+
+            resultado = fotos_para_exibir[i]
+
+            # -------------------------
+            # Validar foto nula / inválida
+            # -------------------------
+            if resultado is None:
+                st.warning(f"⚠️ A análise da Foto {i+1} não retornou dados.")
+                continue
+
+            if not isinstance(resultado, dict):
+                st.warning(f"⚠️ A análise da Foto {i+1} retornou um formato inesperado.")
+                continue
+
+            if "emotions" not in resultado or resultado["emotions"] is None:
+                st.warning(f"⚠️ Foto {i+1} não possui campo 'emotions'.")
+                continue
+
+            emotions = resultado["emotions"]
+
+            if not isinstance(emotions, dict):
+                st.warning(f"⚠️ Emoções da Foto {i+1} estão em formato inválido.")
+                continue
+
+            # -------------------------
+            # Emoção predominante
+            # -------------------------
+            try:
+                eng_pred = max(emotions, key=emotions.get)
+                pred_pt = traducoes_emocoes.get(eng_pred, eng_pred)
+            except Exception:
+                pred_pt = "Desconhecida"
+
+            cor_pred = cores_emocoes.get(pred_pt, "#5A6ACF")
+
+            # Mini-card centrado
+            st.markdown(
+                f"""
+                <div style="text-align:center;">
+                    <div style="display:inline-block; background:#F6F7FF; padding:8px 12px;
+                                border-left:6px solid {cor_pred};
+                                border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.08);
+                                font-weight:600; margin-bottom:6px;">
+                        Foto {i+1} — Emoção Predominante: {pred_pt}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # -------------------------
+            # Preparar gráfico
+            # -------------------------
+            labels_pt = []
+            valores = []
+            cores_graf = []
+
+            for eng in ordem_emocoes_eng:
+                if eng in emotions:
+                    labels_pt.append(traducoes_emocoes[eng])
+                    valores.append(float(emotions[eng]))
+                    cores_graf.append(cores_emocoes[traducoes_emocoes[eng]])
+
+            # Gráfico
+            fig, ax = plt.subplots(figsize=(4.5, 3.5))
+            bars = ax.bar(labels_pt, valores, color=cores_graf)
+            ax.set_ylim(0, max(valores) * 1.25 if max(valores) > 0 else 1)
+            ax.tick_params(axis='x', rotation=35)
+            ax.set_ylabel("Percentual")
+
+            for bar, v in zip(bars, valores):
+                ax.text(
+                    bar.get_x() + bar.get_width()/2,
+                    bar.get_height() + 0.5,
+                    f"{v:.1f}%",
+                    ha='center',
+                    fontsize=10,
+                    fontweight='bold'
+                )
+
+            st.pyplot(fig)
