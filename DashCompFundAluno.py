@@ -29,7 +29,7 @@ def aplicar_css_tema_claro():
     .kpi-card {
         background: #F6F7FF;
         border-left: 6px solid #5A6ACF;
-        padding: 10px;
+        padding: 6px;
         border-radius: 12px;
         box-shadow: 0 1px 6px rgba(0,0,0,0.06);
         text-align: left;
@@ -326,3 +326,4 @@ def dashboardCompFund(email_hash=None):
         st.markdown(criar_html_tabela(df_tabela, cores_classificacao), unsafe_allow_html=True)
 
     # FIM da função dashboard
+
