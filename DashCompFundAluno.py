@@ -301,9 +301,12 @@ def dashboardCompFund(email_hash=None):
     # ========================================================
     with aba2:
         st.markdown("<h3 style='color:#000'>📋 Relação de Alunos por Classificação</h3>", unsafe_allow_html=True)
-        st.caption("Tabela detalhada — última coluna mostra a turma do aluno.")
 
-        df_tabela = df[[
+        classific_select = st.selectbox("⬇️Selecione a classificação desejada abaixo⬇️", df["Classificação"].unique())
+
+        df_classific = df[df["Classificação"] == classific_select]
+
+        df_tabela = df_classific[[
             "Classificação",
             "soma_erros",
             "pts_ilha_leitura",
@@ -323,4 +326,3 @@ def dashboardCompFund(email_hash=None):
         st.markdown(criar_html_tabela(df_tabela, cores_classificacao), unsafe_allow_html=True)
 
     # FIM da função dashboard
-
