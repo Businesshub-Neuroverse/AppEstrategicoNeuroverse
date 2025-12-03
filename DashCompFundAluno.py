@@ -244,7 +244,7 @@ def dashboardCompFund(email_hash=None):
     # ========================================================
     with aba1:
         st.markdown("<h3 style='color:#000'>📚 Distribuição de Classificações por Turma e Alunos</h3>", unsafe_allow_html=True)
-        st.caption("Mostrando a proporção de alunos por classificação dentro de cada turma.")
+        st.caption("Mostrando a proporção de alunos por classificação dentro de cada turma nas ilhas: Leitura, Escrita e Cálculo.")
 
         # Agrupar dados
         agrupado = df.groupby(["turma_id", "Classificação"]).agg(
@@ -323,3 +323,4 @@ def dashboardCompFund(email_hash=None):
         st.markdown(criar_html_tabela(df_tabela, cores_classificacao), unsafe_allow_html=True)
 
     # FIM da função dashboard
+
