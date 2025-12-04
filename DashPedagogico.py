@@ -14,24 +14,89 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     # Estilo da página
     # ---------------------------
-
     st.markdown("""
     <style>
-    [data-testid="stHeader"], div[role="banner"] { display: none !important; }
-    body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
-        padding-top: 0 !important; margin-top: 0 !important;
-    }
-    .stTextInput > div > div > input {
-        border: 2px solid #4CAF50; border-radius: 8px; padding: 8px; outline: none;
-    }
-    .stTextInput > div > div > input:focus {
-        border: 2px solid #2196F3; box-shadow: 0 0 5px rgba(33,150,243,0.5);
-    }
+        /* -----------------------------
+        REMOVER HEADER E AJUSTAR LAYOUT
+        ----------------------------- */
+        [data-testid="stHeader"], 
+        div[role="banner"] { 
+            display: none !important; 
+        }
+
+        body, .stApp, [data-testid="stAppViewContainer"], 
+        [data-testid="stBlock"], .main, .block-container {
+            padding-top: 0 !important; 
+            margin-top: 0 !important;
+        }
+        
+        /* -----------------------------
+        MULTISELECT / SELECT – ESTILO BASE
+        ----------------------------- */
+
+        /* Caixa geral */
+        div[data-baseweb="select"] {
+            border-radius: 12px !important;
+            border: 1px solid #d5d5d5 !important;
+            padding: 4px !important;
+            background-color: #ffffff !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Foco */
+        div[data-baseweb="select"]:focus-within {
+            border-color: #5A6ACF !important;
+            box-shadow: 0 0 0 2px rgba(90, 106, 207, 0.25) !important;
+        }
+
+        /* Texto */
+        div[data-baseweb="select"] div {
+            font-size: 15px !important;
+            color: #333 !important;
+        }
+
+        /* Hover no item da lista */
+        ul[role="listbox"] > li:hover {
+            background-color: #eef0ff !important;
+            color: #5A6ACF !important;
+            cursor: pointer !important;
+        }
+
+        /* -----------------------------
+        FIX DEFINITIVO DO FUNDO PRETO
+        (Chips + item selecionado)
+        ----------------------------- */
+
+        /* Chip do multiselect */
+        div[data-baseweb="tag"][class] {
+            background: #EEF0FF !important;
+            background-color: #EEF0FF !important;
+            color: #5A6ACF !important;
+            border-radius: 10px !important;
+            padding: 2px 8px !important;
+        }
+
+        /* Texto do chip */
+        div[data-baseweb="tag"][class] span {
+            color: #5A6ACF !important;
+            font-weight: 600 !important;
+        }
+
+        /* Ícone X do chip */
+        div[data-baseweb="tag"][class] svg {
+            fill: #5A6ACF !important;
+        }
+
+        /* Item selecionado na lista */
+        ul[role="listbox"] > li[aria-selected="true"] {
+            background: #5A6ACF !important;
+            color: white !important;
+        }        
     </style>
     """, unsafe_allow_html=True)
 
     st.set_page_config(page_title="Dash Pedagógico", page_icon="assets/favicon.ico", layout="wide")
-    st.title("📊 Desempenho Geral Pedagógico")
+    st.markdown("<h2 style='color: #5A6ACF;'>📊 Desempenho Geral Pedagógico das Escolas</h2>", unsafe_allow_html=True)
 
     # ---------------------------
     # Consulta SQL
@@ -90,28 +155,15 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     # Layout de seleção
     # ---------------------------
-    #col0, col1 = st.columns([2, 2])
-    col0 = st.columns(1)[0]
+    todas_escolas = sorted(df["escola_nome"].unique())
+    escola_select = st.multiselect("Selecione uma ou mais turmas:",  todas_escolas, default=[todas_escolas[0]])
 
-    busca = col0.text_input("🔍 Buscar escola")
-    todas_escolas = df["escola_nome"].unique()
-    escolas_visiveis = [e for e in todas_escolas if busca.lower() in e.lower()] if busca else todas_escolas
-
-    # Checkbox global para selecionar todas
-    selecionar_tudo = col0.checkbox("✅ Selecionar/Limpar todas as escolas")
-
-    selecionadas = []
-    for escola in escolas_visiveis:
-        valor_inicial = True if selecionar_tudo else False
-        marcado = col0.checkbox(escola, value=valor_inicial)
-        if marcado:
-            selecionadas.append(escola)
-
-    if not selecionadas:
-        st.warning("Selecione ao menos uma escola acima para visualizar o gráfico.")
-        st.stop()
-
-    df_filtrado = df[df["escola_nome"].isin(selecionadas)]
+    if not escola_select:
+        escola_select = [todas_escolas[0]]
+        df_filtrado = df[df["escola_nome"].isin(escola_select)]
+    else:
+        df_filtrado = df[df["escola_nome"].isin(escola_select)]
+    
 
     # ---------------------------
     # Cores e função de pontuação
@@ -139,11 +191,6 @@ def dashboardPedagogico(email_hash=None):
     # Gráfico empilhado
     # ---------------------------
     df_stack = df_filtrado.groupby(["classificacao_aluno","escola_nome"], as_index=False).agg(qtd_alunosAvaliados=("aluno_nome","count"))
-    
-    #df_media = df_filtrado.groupby("escola_nome")["avaliacao_classif"].mean().reset_index()
-    #df_media["cor_media"] = df_media["avaliacao_classif"].apply(cor_por_pontuacao)
-    #df_media["escola_label"] = df_media["escola_nome"] + " (" + df_media["avaliacao_classif"].round(1).astype(str) + " pts)"
-    #df_stack = df_stack.merge(df_media[["escola_nome","escola_label","cor_media"]], on="escola_nome", how="left")
 
     df_media = df_filtrado.groupby("escola_nome")["avaliacao_erros"].mean().reset_index()
     df_media["cor_media"] = df_media["avaliacao_erros"].apply(cor_por_pontuacao)
@@ -221,15 +268,11 @@ def dashboardPedagogico(email_hash=None):
 
     df_tabela = df_ilhas.groupby(["aluno_nome","classificacao_aluno"], as_index=False).mean(numeric_only=True)
     df_tabela[colunas_ilhas] = df_tabela[colunas_ilhas].round(1)
-    #df_tabela["avaliacao_classif"] = df_tabela["avaliacao_classif"].round(1)
-    #df_tabela = df_tabela.rename(columns={"avaliacao_classif":"Pontuação Geral"})
 
-    #colunas_final = ["aluno_nome","Pontuação Geral","avaliacao_erros"] + colunas_ilhas
     colunas_final = ["aluno_nome","avaliacao_erros"] + colunas_ilhas
     df_tabela = df_tabela[colunas_final].rename(columns={"aluno_nome":"Aluno", **labels_ilhas})
 
     def colorir_linha_por_pg(row):
-        #cor = cor_por_pontuacao(row["Pontuação Geral"])
         cor = cor_por_pontuacao(row["Erros Totais"])
         return [f'background-color: {cor}; color: black'] * len(row)
 
@@ -238,10 +281,9 @@ def dashboardPedagogico(email_hash=None):
     # ---------------------------
     # Exibe gráfico e tabela
     # ---------------------------
-    st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **{classif_clicked}**")
+    st.markdown(f"### 🔎 **{escola_clicked}** - Alunos: **<span style='color:#5A6ACF; font-size:30px;'>{classif_clicked}</span>**", unsafe_allow_html=True)
+
     st.dataframe(df_styled)
-
-
 
 
 
