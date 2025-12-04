@@ -258,4 +258,5 @@ def escolasNoMapa():
     # -------------------------------------
     # 📊 Layout final
     # -------------------------------------
-    st_folium(m, width='stretch', height=480, returned_objects=[])
+    st_folium(m, width='stretch', height=500, returned_objects=[])
+
