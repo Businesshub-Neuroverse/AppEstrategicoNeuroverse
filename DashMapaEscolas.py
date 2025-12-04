@@ -15,9 +15,13 @@ def escolasNoMapa():
     # -------------------------------------
     st.markdown("""
     <style>
-    [data-testid="stHeader"], div[role="banner"] { display: none !important; }
-    body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stBlock"], .main, .block-container {
-        padding-top: 0 !important; margin-top: 0 !important;
+    [data-testid="stHeader"], div[role="banner"] { display:none !important; }
+
+    body, .stApp, [data-testid="stAppViewContainer"],
+    .block-container {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+        background-color: #ffffff !important;
     }
 
     /* Estiliza os contêineres dos selectbox */
@@ -50,11 +54,36 @@ def escolasNoMapa():
     div[data-baseweb="select"] svg {
         color: #4A90E2 !important;
     }
+    
+    /* -----------------------------
+    CARDS MODERNOS
+    ----------------------------- */
+    .card {
+        background-color: #ffffff;
+        padding: 2px;
+        border-radius: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .card-title {
+        font-size: 16px;
+        color: #444;
+        font-weight: 600;
+    }
+    .card-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #5A6ACF;
+    }
+                
     </style>
     """, unsafe_allow_html=True)
 
     st.set_page_config(page_title="Mapa de Escolas", page_icon="assets/favicon.ico", layout="wide")
-    st.title("📊 Painel Estratégico - Mapa de Escolas")
+    #st.title("📊 Painel Estratégico - Mapa de Escolas")
+
+    st.markdown("<h2 style='color:#5A6ACF;'>🗺️ Painel Estratégico - Mapa de Escolas</h2>", unsafe_allow_html=True)
 
     # -------------------------------------
     # 📦 Consulta ao banco de dados
@@ -136,8 +165,13 @@ def escolasNoMapa():
 
     # --- Métrica ---
     with col3:
-        #st.metric('Total de Escolas', df.shape[0])
-        st.metric('Total de Escolas', df['school_name'].nunique())
+
+        st.markdown(f"""
+        <div class="card ">
+            <div class="card-title">Total de Escolas</div>
+            <div class="card-value">{df['school_name'].nunique()}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Caso não haja dados após os filtros
     if df.empty:
@@ -221,13 +255,7 @@ def escolasNoMapa():
             icon=folium.Icon(color='blue', icon='graduation-cap', prefix='fa')
         ).add_to(marker_container)
 
-
     # -------------------------------------
     # 📊 Layout final
     # -------------------------------------
-    st_folium(m, width='stretch', returned_objects=[])
-
-    #st.dataframe(df.reset_index(drop=True))
-
-
-
+    st_folium(m, width='stretch', height=480, returned_objects=[])
